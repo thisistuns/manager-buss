@@ -496,6 +496,28 @@ function downloadCodes() {
 
 // === Logic Quản lý Thành viên ===
 
+async function syncTeamMemberCount(teamId) {
+    // Đồng bộ số thành viên hiển thị trên Dashboard (bảng Team) sau khi thao tác trong modal
+    try {
+        const info = await apiCall(`/admin/teams/${teamId}/info`);
+        if (!info.success) return;
+
+        const team = info.data.team;
+        if (!team) return;
+
+        // Cập nhật cột "Thành viên" trong bảng Dashboard nếu có
+        const viewBtn = document.querySelector(`.btn-view-members[data-id="${teamId}"]`);
+        const row = viewBtn ? viewBtn.closest('tr') : null;
+        const memberCountEl = row ? row.querySelector('.member-count') : null;
+        if (memberCountEl) {
+            memberCountEl.textContent = `${team.current_members}/${team.max_members}`;
+        }
+    } catch (e) {
+        // Không chặn luồng UX nếu sync thất bại
+        console.warn('syncTeamMemberCount failed:', e);
+    }
+}
+
 async function viewMembers(teamId, teamEmail = '') {
     window.currentTeamId = teamId;
     const modal = document.getElementById('manageMembersModal');
@@ -602,6 +624,7 @@ async function revokeInvite(teamId, email, inModal = false) {
             showToast('Thu hồi thành công', 'success');
             if (inModal) {
                 await loadModalMemberList(teamId);
+                await syncTeamMemberCount(teamId);
             } else {
                 setTimeout(() => location.reload(), 1000);
             }
@@ -641,6 +664,7 @@ async function handleAddMember(event) {
             // Trong modal, chỉ tải lại danh sách
             if (document.getElementById('manageMembersModal').classList.contains('show')) {
                 await loadModalMemberList(teamId);
+                await syncTeamMemberCount(teamId);
             } else {
                 setTimeout(() => location.reload(), 1500);
             }
@@ -670,6 +694,7 @@ async function deleteMember(teamId, userId, email, inModal = false) {
             showToast('Xóa thành công', 'success');
             if (inModal) {
                 await loadModalMemberList(teamId);
+                await syncTeamMemberCount(teamId);
             } else {
                 setTimeout(() => location.reload(), 1000);
             }
