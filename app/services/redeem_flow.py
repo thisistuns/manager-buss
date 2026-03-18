@@ -1,6 +1,6 @@
 """
-兑换流程服务 (Redeem Flow Service)
-协调兑换码验证, Team 选择和加入 Team 的完整流程
+Dịch vụ quy trình đổi mã (Redeem Flow Service)
+Điều phối việc xác minh mã đổi, chọn Team và quy trình đầy đủ để tham gia Team
 """
 import logging
 import asyncio
@@ -21,17 +21,17 @@ from app.utils.time_utils import get_now
 
 logger = logging.getLogger(__name__)
 
-# 全局兑换锁: 针对 code 进行加锁，防止同一个码并发请求
+# Khóa đổi mã toàn cục: khóa theo code, tránh cùng một mã bị yêu cầu song song
 _code_locks = defaultdict(asyncio.Lock)
-# 全局 Team 锁: 针对 Team 进行加锁，防止并发拉人导致的人数状态不同步
+# Khóa Team toàn cục: khóa theo Team, tránh việc kéo người song song làm lệch trạng thái số lượng thành viên
 _team_locks = defaultdict(asyncio.Lock)
 
 
 class RedeemFlowService:
-    """兑换流程场景服务类"""
+    """Lớp dịch vụ kịch bản quy trình đổi mã"""
 
     def __init__(self):
-        """初始化兑换流程服务"""
+        """Khởi tạo dịch vụ quy trình đổi mã"""
         from app.services.chatgpt import chatgpt_service
         self.redemption_service = RedemptionService()
         self.warranty_service = warranty_service

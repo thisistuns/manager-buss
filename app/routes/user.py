@@ -1,6 +1,6 @@
 """
-用户路由
-处理用户兑换页面
+Route người dùng
+Xử lý hiển thị trang đổi mã của người dùng
 """
 import logging
 from fastapi import APIRouter, Request, Depends
@@ -10,7 +10,7 @@ from app.database import get_db
 
 logger = logging.getLogger(__name__)
 
-# 创建路由器
+# Tạo router
 router = APIRouter(
     tags=["user"]
 )
@@ -22,14 +22,14 @@ async def redeem_page(
     db: AsyncSession = Depends(get_db)
 ):
     """
-    用户兑换页面
+    Trang đổi mã của người dùng
 
     Args:
-        request: FastAPI Request 对象
-        db: 数据库会话
+        request: Đối tượng Request FastAPI
+        db: Phiên truy cập cơ sở dữ liệu
 
     Returns:
-        用户兑换页面 HTML
+        HTML trang đổi mã
     """
     try:
         from app.main import templates
@@ -38,7 +38,7 @@ async def redeem_page(
         team_service = TeamService()
         remaining_spots = await team_service.get_total_available_seats(db)
 
-        logger.info(f"用户访问兑换页面，剩余车位: {remaining_spots}")
+        logger.info(f"Người dùng truy cập trang đổi mã, số chỗ còn lại: {remaining_spots}")
 
         return templates.TemplateResponse(
             "user/redeem.html",
@@ -49,8 +49,8 @@ async def redeem_page(
         )
 
     except Exception as e:
-        logger.error(f"渲染兑换页面失败: {e}")
+        logger.error(f"Hiển thị trang đổi mã thất bại: {e}")
         return HTMLResponse(
-            content=f"<h1>页面加载失败</h1><p>{str(e)}</p>",
+            content=f"<h1>Tải trang thất bại</h1><p>{str(e)}</p>",
             status_code=500
         )

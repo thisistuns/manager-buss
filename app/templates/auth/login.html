@@ -1,26 +1,26 @@
 {% extends "base.html" %}
 
-{% block title %}登录 - GPT Team 管理系统{% endblock %}
+{% block title %}Đăng nhập - Hệ thống Quản lý GPT Team{% endblock %}
 
 {% block auth_content %}
 <div class="login-container">
     <div class="login-box">
-        <h2>管理员登录</h2>
+        <h2>Đăng nhập Quản trị</h2>
         <form id="loginForm" onsubmit="handleLogin(event)">
             <div class="form-group">
-                <label for="password">密码</label>
+                <label for="password">Mật khẩu</label>
                 <input
                     type="password"
                     id="password"
                     name="password"
                     class="form-control"
-                    placeholder="请输入管理员密码"
+                    placeholder="Nhập mật khẩu quản trị"
                     required
                     autocomplete="current-password"
                 >
             </div>
             <div id="errorMessage" class="error-message" style="display: none;"></div>
-            <button type="submit" class="btn btn-primary btn-block">登录</button>
+            <button type="submit" class="btn btn-primary btn-block">Đăng nhập</button>
         </form>
     </div>
 </div>
@@ -35,9 +35,9 @@ async function handleLogin(event) {
     const errorMessage = document.getElementById('errorMessage');
     const submitButton = event.target.querySelector('button[type="submit"]');
 
-    // 禁用提交按钮
+    // Vô hiệu hóa nút submit
     submitButton.disabled = true;
-    submitButton.textContent = '登录中...';
+    submitButton.textContent = 'Đang đăng nhập...';
     errorMessage.style.display = 'none';
 
     try {
@@ -52,20 +52,20 @@ async function handleLogin(event) {
         const data = await response.json();
 
         if (response.ok && data.success) {
-            // 登录成功,跳转到管理员面板
+            // Đăng nhập thành công, chuyển đến bảng điều khiển
             window.location.href = '/admin';
         } else {
-            // 显示错误信息
-            errorMessage.textContent = data.error || '登录失败';
+            // Hiển thị thông báo lỗi
+            errorMessage.textContent = data.error || 'Đăng nhập thất bại';
             errorMessage.style.display = 'block';
             submitButton.disabled = false;
-            submitButton.textContent = '登录';
+            submitButton.textContent = 'Đăng nhập';
         }
     } catch (error) {
-        errorMessage.textContent = '网络错误,请稍后重试';
+        errorMessage.textContent = 'Lỗi kết nối, vui lòng thử lại';
         errorMessage.style.display = 'block';
         submitButton.disabled = false;
-        submitButton.textContent = '登录';
+        submitButton.textContent = 'Đăng nhập';
     }
 }
 </script>

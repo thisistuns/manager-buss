@@ -1,46 +1,46 @@
 """
-应用配置模块
-使用 Pydantic Settings 管理配置
+Module cấu hình ứng dụng
+Sử dụng Pydantic Settings để quản lý cấu hình
 """
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pathlib import Path
 
 
-# 项目根目录
+# Thư mục gốc của project
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 class Settings(BaseSettings):
-    """应用配置"""
+    """Cấu hình ứng dụng"""
 
-    # 应用配置
-    app_name: str = "GPT Team 管理系统"
+    # Cấu hình ứng dụng
+    app_name: str = "Hệ thống Quản lý GPT Team"
     app_version: str = "0.1.0"
     app_host: str = "0.0.0.0"
     app_port: int = 8008
     debug: bool = True
 
-    # 数据库配置
-    # 建议在 Docker 中使用 data 目录挂载，以避免文件挂载权限或类型问题
+    # Cấu hình database
+    # Khuyến nghị dùng thư mục data khi chạy Docker để tránh lỗi quyền truy cập
     database_url: str = f"sqlite+aiosqlite:///{BASE_DIR}/data/team_manage.db"
 
-    # 安全配置
+    # Cấu hình bảo mật
     secret_key: str = "your-secret-key-here-change-in-production"
     admin_password: str = "admin123"
 
-    # 日志配置
+    # Cấu hình logging
     log_level: str = "INFO"
     database_echo: bool = False
 
-    # 代理配置
+    # Cấu hình proxy
     proxy: str = ""
     proxy_enabled: bool = False
 
-    # JWT 配置
+    # Cấu hình JWT
     jwt_verify_signature: bool = False
 
-    # 时区配置
-    timezone: str = "Asia/Shanghai"
+    # Cấu hình múi giờ
+    timezone: str = "Asia/Ho_Chi_Minh"
 
     model_config = SettingsConfigDict(
         env_file=BASE_DIR / ".env",
@@ -49,5 +49,5 @@ class Settings(BaseSettings):
     )
 
 
-# 创建全局配置实例
+# Tạo instance cấu hình toàn cục
 settings = Settings()

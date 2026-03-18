@@ -1,6 +1,6 @@
-// 用户兑换页面JavaScript
+// JavaScript Trang Đổi Mã Người Dùng
 
-// HTML转义函数 - 防止XSS攻击
+// Hàm chuyển đổi HTML - Phòng chống XSS
 function escapeHtml(unsafe) {
     if (unsafe === null || unsafe === undefined) {
         return '';
@@ -13,13 +13,13 @@ function escapeHtml(unsafe) {
         .replace(/'/g, "&#039;");
 }
 
-// 全局变量
+// Biến toàn cục
 let currentEmail = '';
 let currentCode = '';
 let availableTeams = [];
 let selectedTeamId = null;
 
-// Toast提示函数
+// Hàm thông báo Toast
 function showToast(message, type = 'info') {
     const toast = document.getElementById('toast');
     if (!toast) return;
@@ -40,11 +40,11 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
-// 切换步骤
+// Chuyển đổi bước
 function showStep(stepNumber) {
     document.querySelectorAll('.step').forEach(step => {
         step.classList.remove('active');
-        step.style.display = ''; // 清除内联样式，交由CSS类控制显隐
+        step.style.display = ''; // Xóa inline style, để CSS kiểm soát
     });
     const targetStep = document.getElementById(`step${stepNumber}`);
     if (targetStep) {
@@ -52,13 +52,13 @@ function showStep(stepNumber) {
     }
 }
 
-// 返回步骤1
+// Quay về bước 1
 function backToStep1() {
     showStep(1);
     selectedTeamId = null;
 }
 
-// 步骤1: 验证兑换码并直接兑换
+// Bước 1: Xác minh mã đổi và đổi ngay
 document.getElementById('verifyForm').addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -66,29 +66,29 @@ document.getElementById('verifyForm').addEventListener('submit', async (e) => {
     const code = document.getElementById('code').value.trim();
     const verifyBtn = document.getElementById('verifyBtn');
 
-    // 验证
+    // Kiểm tra thông tin
     if (!email || !code) {
-        showToast('请填写完整信息', 'error');
+        showToast('Vui lòng điền đầy đủ thông tin', 'error');
         return;
     }
 
-    // 保存到全局变量
+    // Lưu vào biến toàn cục
     currentEmail = email;
     currentCode = code;
 
-    // 禁用按钮
+    // Vô hiệu hóa nút
     verifyBtn.disabled = true;
-    verifyBtn.textContent = '正在兑换...';
+    verifyBtn.textContent = 'Đang đổi mã...';
 
-    // 直接调用兑换接口 (team_id = null 表示自动选择)
+    // Gọi trực tiếp API đổi mã (team_id = null là tự động chọn)
     await confirmRedeem(null);
 
-    // 恢复按钮状态 (如果 confirmRedeem 失败并显示了错误也没关系，因为用户可以点返回重试)
+    // Khôi phục nút (nếu confirmRedeem thất bại và hiển thị lỗi thì OK, người dùng có thể nhấn quay lại để thử lại)
     verifyBtn.disabled = false;
-    verifyBtn.textContent = '验证兑换码';
+    verifyBtn.textContent = 'Xác minh Mã đổi';
 });
 
-// 渲染Team列表
+// Hiển thị danh sách Team
 function renderTeamsList() {
     const teamsList = document.getElementById('teamsList');
     teamsList.innerHTML = '';
@@ -105,7 +105,7 @@ function renderTeamsList() {
             <div class="team-info">
                 <div class="team-info-item">
                     <i data-lucide="users" style="width: 14px; height: 14px;"></i>
-                    <span>${team.current_members}/${team.max_members} 成员</span>
+                    <span>${team.current_members}/${team.max_members} thành viên</span>
                 </div>
                 <div class="team-info-item">
                     <span class="team-badge ${planBadge}">${escapeHtml(team.subscription_plan) || 'Plus'}</span>
@@ -113,7 +113,7 @@ function renderTeamsList() {
                 ${team.expires_at ? `
                 <div class="team-info-item">
                     <i data-lucide="calendar" style="width: 14px; height: 14px;"></i>
-                    <span>到期: ${formatDate(team.expires_at)}</span>
+                    <span>Hết hạn: ${formatDate(team.expires_at)}</span>
                 </div>
                 ` : ''}
             </div>
@@ -124,37 +124,34 @@ function renderTeamsList() {
     });
 }
 
-// 选择Team
+// Chọn Team
 function selectTeam(teamId) {
     selectedTeamId = teamId;
 
-    // 更新UI
+    // Cập nhật UI
     document.querySelectorAll('.team-card').forEach(card => {
         card.classList.remove('selected');
     });
     event.currentTarget.classList.add('selected');
 
-    // 立即确认兑换
+    // Xác nhận đổi mã ngay
     confirmRedeem(teamId);
 }
 
-// 自动选择Team
+// Tự động chọn Team
 function autoSelectTeam() {
     if (availableTeams.length === 0) {
-        showToast('没有可用的 Team', 'error');
+        showToast('Không có Team nào khả dụng', 'error');
         return;
     }
 
-    // 自动选择第一个Team(后端会按过期时间排序)
+    // Tự động chọn Team đầu tiên (backend sẽ sắp xếp theo thời gian hết hạn)
     confirmRedeem(null);
 }
 
-// 确认兑换
+// Xác nhận đổi mã
 async function confirmRedeem(teamId) {
-    console.log('Starting redemption process, teamId:', teamId);
-
-    // Safety check: Ensure confirmRedeem doesn't run if already running? 
-    // The button disable logic handles that.
+    console.log('Bắt đầu quá trình đổi mã, teamId:', teamId);
 
     try {
         const response = await fetch('/redeem/confirm', {
@@ -169,33 +166,33 @@ async function confirmRedeem(teamId) {
             })
         });
 
-        console.log('Response status:', response.status);
+        console.log('Trạng thái phản hồi:', response.status);
 
         let data;
         const text = await response.text();
         try {
             data = JSON.parse(text);
         } catch (e) {
-            console.error('Failed to parse response JSON:', text);
-            throw new Error('服务器响应格式错误');
+            console.error('Không thể phân tích JSON phản hồi:', text);
+            throw new Error('Định dạng phản hồi máy chủ bị lỗi');
         }
 
         if (response.ok && data.success) {
-            // 兑换成功
-            console.log('Redemption success');
+            // Đổi mã thành công
+            console.log('Đổi mã thành công');
             showSuccessResult(data);
         } else {
-            // 兑换失败
-            console.warn('Redemption failed:', data);
+            // Đổi mã thất bại
+            console.warn('Đổi mã thất bại:', data);
 
-            // Extract error message safely
-            let errorMessage = '兑换失败';
+            // Trích xuất thông báo lỗi an toàn
+            let errorMessage = 'Đổi mã thất bại';
 
             if (data.detail) {
                 if (typeof data.detail === 'string') {
                     errorMessage = data.detail;
                 } else if (Array.isArray(data.detail)) {
-                    // Handle FastAPI validation errors (array of objects)
+                    // Xử lý lỗi xác thực FastAPI (mảng các đối tượng)
                     errorMessage = data.detail.map(err => err.msg || JSON.stringify(err)).join('; ');
                 } else {
                     errorMessage = JSON.stringify(data.detail);
@@ -207,12 +204,12 @@ async function confirmRedeem(teamId) {
             showErrorResult(errorMessage);
         }
     } catch (error) {
-        console.error('Network or logic error:', error);
-        showErrorResult(error.message || '网络错误,请稍后重试');
+        console.error('Lỗi mạng hoặc logic:', error);
+        showErrorResult(error.message || 'Lỗi kết nối, vui lòng thử lại sau');
     }
 }
 
-// 显示成功结果
+// Hiển thị kết quả thành công
 function showSuccessResult(data) {
     const resultContent = document.getElementById('resultContent');
     const teamInfo = data.team_info || {};
@@ -220,21 +217,21 @@ function showSuccessResult(data) {
     resultContent.innerHTML = `
         <div class="result-success">
             <div class="result-icon"><i data-lucide="check-circle" style="width: 64px; height: 64px; color: var(--success);"></i></div>
-            <div class="result-title">兑换成功!</div>
-            <div class="result-message">${escapeHtml(data.message) || '您已成功加入 Team'}</div>
+            <div class="result-title">Đổi mã thành công!</div>
+            <div class="result-message">${escapeHtml(data.message) || 'Bạn đã tham gia Team thành công'}</div>
 
             <div class="result-details">
                 <div class="result-detail-item">
-                    <span class="result-detail-label">Team 名称</span>
+                    <span class="result-detail-label">Tên Team</span>
                     <span class="result-detail-value">${escapeHtml(teamInfo.team_name) || '-'}</span>
                 </div>
                 <div class="result-detail-item">
-                    <span class="result-detail-label">邮箱地址</span>
+                    <span class="result-detail-label">Địa chỉ Email</span>
                     <span class="result-detail-value">${escapeHtml(currentEmail)}</span>
                 </div>
                 ${teamInfo.expires_at ? `
                 <div class="result-detail-item">
-                    <span class="result-detail-label">到期时间</span>
+                    <span class="result-detail-label">Ngày hết hạn</span>
                     <span class="result-detail-value">${formatDate(teamInfo.expires_at)}</span>
                 </div>
                 ` : ''}
@@ -242,21 +239,21 @@ function showSuccessResult(data) {
 
             <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 2rem; background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px; text-align: left;">
                 <i data-lucide="mail" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;"></i>
-                邀请邮件已发送到您的邮箱，请查收并按照邮件指引接受邀请。
+                Email lời mời đã được gửi đến hộp thư của bạn, vui lòng kiểm tra và làm theo hướng dẫn trong email để chấp nhận lời mời.
             </p>
 
             <div style="margin-bottom: 2rem; border-top: 1px solid var(--border-base); padding-top: 1.5rem;">
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
-                    <strong>没收到邀请邮件？</strong><br>
-                    如果您在 1-5 分钟后仍未收到邮件（或被拦截），请前往“质保查询”进行自助修复。
+                    <strong>Chưa nhận được email lời mời?</strong><br>
+                    Nếu sau 1-5 phút vẫn chưa nhận được email (hoặc bị chặn), hãy vào phần "Tra cứu bảo hành" để tự khắc phục.
                 </p>
                 <button onclick="goToWarrantyFromSuccess()" class="btn btn-secondary" style="width: 100%; border-style: dashed;">
-                    <i data-lucide="shield"></i> 前往质保查询 / 自助修复
+                    <i data-lucide="shield"></i> Tra cứu bảo hành / Tự khắc phục
                 </button>
             </div>
 
             <button onclick="location.reload()" class="btn btn-primary" style="width: 100%;">
-                <i data-lucide="refresh-cw"></i> 再次兑换
+                <i data-lucide="refresh-cw"></i> Đổi mã khác
             </button>
         </div>
     `;
@@ -265,22 +262,22 @@ function showSuccessResult(data) {
     showStep(3);
 }
 
-// 显示错误结果
+// Hiển thị kết quả thất bại
 function showErrorResult(errorMessage) {
     const resultContent = document.getElementById('resultContent');
 
     resultContent.innerHTML = `
         <div class="result-error">
             <div class="result-icon"><i data-lucide="x-circle" style="width: 64px; height: 64px; color: var(--danger);"></i></div>
-            <div class="result-title">兑换失败</div>
+            <div class="result-title">Đổi mã thất bại</div>
             <div class="result-message">${escapeHtml(errorMessage)}</div>
 
             <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem;">
                 <button onclick="backToStep1()" class="btn btn-secondary">
-                    <i data-lucide="arrow-left"></i> 返回重试
+                    <i data-lucide="arrow-left"></i> Quay lại thử lại
                 </button>
                 <button onclick="location.reload()" class="btn btn-primary">
-                    <i data-lucide="rotate-ccw"></i> 重新开始
+                    <i data-lucide="rotate-ccw"></i> Bắt đầu lại
                 </button>
             </div>
         </div>
@@ -290,7 +287,7 @@ function showErrorResult(errorMessage) {
     showStep(3);
 }
 
-// 格式化日期
+// Định dạng ngày
 function formatDate(dateString) {
     if (!dateString) return '-';
 
@@ -305,22 +302,22 @@ function formatDate(dateString) {
     }
 }
 
-// ========== 质保查询功能 ==========
+// ========== Chức năng Tra cứu Bảo hành ==========
 
-// 查询质保状态
+// Tra cứu trạng thái bảo hành
 async function checkWarranty() {
     const input = document.getElementById('warrantyInput').value.trim();
 
-    // 验证输入
+    // Kiểm tra đầu vào
     if (!input) {
-        showToast('请输入原兑换码或邮箱进行查询', 'error');
+        showToast('Vui lòng nhập mã đổi gốc hoặc email để tra cứu', 'error');
         return;
     }
 
     let email = null;
     let code = null;
 
-    // 简单判断是邮箱还是兑换码
+    // Phân biệt email hay mã đổi đơn giản
     if (input.includes('@')) {
         email = input;
     } else {
@@ -329,7 +326,7 @@ async function checkWarranty() {
 
     const checkBtn = document.getElementById('checkWarrantyBtn');
     checkBtn.disabled = true;
-    checkBtn.innerHTML = '<i data-lucide="loader" class="spinning"></i> 查询中...';
+    checkBtn.innerHTML = '<i data-lucide="loader" class="spinning"></i> Đang tra cứu...';
     if (window.lucide) lucide.createIcons();
 
     try {
@@ -349,45 +346,45 @@ async function checkWarranty() {
         if (response.ok && data.success) {
             showWarrantyResult(data);
         } else {
-            showToast(data.error || data.detail || '查询失败', 'error');
+            showToast(data.error || data.detail || 'Tra cứu thất bại', 'error');
         }
     } catch (error) {
-        showToast('网络错误，请稍后重试', 'error');
+        showToast('Lỗi kết nối, vui lòng thử lại sau', 'error');
     } finally {
         checkBtn.disabled = false;
-        checkBtn.innerHTML = '<i data-lucide="search"></i> 查询质保状态';
+        checkBtn.innerHTML = '<i data-lucide="search"></i> Tra cứu trạng thái bảo hành';
         if (window.lucide) lucide.createIcons();
     }
 }
 
-// 显示质保查询结果
+// Hiển thị kết quả tra cứu bảo hành
 function showWarrantyResult(data) {
     const warrantyContent = document.getElementById('warrantyContent');
 
-    // 处理“虚假成功自愈”后的特殊提示
+    // Xử lý trường hợp đặc biệt: "tự động khắc phục"
     if ((!data.records || data.records.length === 0) && data.can_reuse) {
         warrantyContent.innerHTML = `
             <div class="result-info" style="text-align: center; padding: 2rem;">
                 <div class="result-icon"><i data-lucide="check-circle" style="width: 56px; height: 56px; color: var(--success);"></i></div>
-                <div class="result-title" style="font-size: 1.25rem; margin: 1.2rem 0; color: var(--success);">修复成功！</div>
+                <div class="result-title" style="font-size: 1.25rem; margin: 1.2rem 0; color: var(--success);">Khắc phục thành công!</div>
                 <div class="result-message" style="color: var(--text-primary); background: rgba(34, 197, 94, 0.05); padding: 1.2rem; border-radius: 12px; border: 1px solid rgba(34, 197, 94, 0.2); line-height: 1.6;">
-                    ${escapeHtml(data.message || '系统检测到异常并已自动修复')}
+                    ${escapeHtml(data.message || 'Hệ thống phát hiện lỗi và đã tự động khắc phục')}
                 </div>
                 
                 <div style="margin-top: 2rem; text-align: left; background: rgba(255,255,255,0.03); padding: 1.2rem; border-radius: 12px; border: 1px dashed var(--border-base);">
-                    <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.8rem;">请复制您的兑换码返回主页重试：</div>
+                    <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.8rem;">Vui lòng sao chép mã đổi của bạn và quay về trang chính để thử lại:</div>
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
                         <input type="text" value="${escapeHtml(data.original_code)}" readonly 
                             style="flex: 1; padding: 0.75rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border-base); border-radius: 8px; color: var(--text-primary); font-family: monospace; font-size: 1.1rem;">
                         <button onclick="copyWarrantyCode('${escapeHtml(data.original_code)}')" class="btn btn-secondary" style="white-space: nowrap;">
-                            <i data-lucide="copy"></i> 复制
+                            <i data-lucide="copy"></i> Sao chép
                         </button>
                     </div>
                 </div>
 
                 <div style="margin-top: 2rem;">
                     <button onclick="backToStep1()" class="btn btn-primary" style="width: 100%;">
-                        <i data-lucide="arrow-left"></i> 立即返回重兑
+                        <i data-lucide="arrow-left"></i> Quay lại đổi mã ngay
                     </button>
                 </div>
             </div>
@@ -400,28 +397,28 @@ function showWarrantyResult(data) {
         warrantyContent.innerHTML = `
             <div class="result-info" style="text-align: center; padding: 2rem;">
                 <div class="result-icon"><i data-lucide="info" style="width: 48px; height: 48px; color: var(--text-muted);"></i></div>
-                <div class="result-title" style="font-size: 1.2rem; margin: 1rem 0;">未找到兑换记录</div>
-                <div class="result-message" style="color: var(--text-muted);">${escapeHtml(data.message || '未找到相关记录')}</div>
+                <div class="result-title" style="font-size: 1.2rem; margin: 1rem 0;">Không tìm thấy lịch sử đổi mã</div>
+                <div class="result-message" style="color: var(--text-muted);">${escapeHtml(data.message || 'Không tìm thấy dữ liệu liên quan')}</div>
             </div>
         `;
     } else {
-        // 1. 顶部状态概览 (如果有质保码)
+        // 1. Tổng quan trạng thái (nếu có mã bảo hành)
         let summaryHtml = '';
         if (data.has_warranty) {
             const warrantyStatus = data.warranty_valid ?
-                '<span class="badge badge-success">✓ 质保有效</span>' :
-                '<span class="badge badge-error">✗ 质保已过期</span>';
+                '<span class="badge badge-success">✓ Bảo hành còn hiệu lực</span>' :
+                '<span class="badge badge-error">✗ Bảo hành đã hết hạn</span>';
 
             summaryHtml = `
                 <div class="warranty-summary" style="margin-bottom: 2rem; padding: 1.2rem; background: rgba(255,255,255,0.03); border-radius: 12px; border: 1px solid var(--border-base);">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                            <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.4rem;">当前质保状态</div>
+                            <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.4rem;">Trạng thái bảo hành hiện tại</div>
                             <div style="font-size: 1.1rem; font-weight: 600;">${warrantyStatus}</div>
                         </div>
                         ${data.warranty_expires_at ? `
                         <div style="text-align: right;">
-                            <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.4rem;">质保到期时间</div>
+                            <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.4rem;">Ngày hết hạn bảo hành</div>
                             <div style="font-size: 1rem;">${formatDate(data.warranty_expires_at)}</div>
                         </div>
                         ` : ''}
@@ -430,23 +427,23 @@ function showWarrantyResult(data) {
             `;
         }
 
-        // 2. 兑换记录列表
+        // 2. Danh sách lịch sử đổi mã
         const recordsHtml = `
             <div class="records-section">
-                <h4 style="margin: 0 0 1rem 0; font-size: 1rem; color: var(--text-primary);">我的兑换记录</h4>
+                <h4 style="margin: 0 0 1rem 0; font-size: 1rem; color: var(--text-primary);">Lịch sử đổi mã của tôi</h4>
                 <div style="display: flex; flex-direction: column; gap: 1rem;">
                     ${data.records.map(record => {
             const typeMarker = record.has_warranty ?
-                '<span class="badge badge-warranty" style="background: var(--primary); color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem;">质保码</span>' :
-                '<span class="badge badge-normal" style="background: rgba(255,255,255,0.1); color: var(--text-muted); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem;">常规码</span>';
+                '<span class="badge badge-warranty" style="background: var(--primary); color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem;">Mã BH</span>' :
+                '<span class="badge badge-normal" style="background: rgba(255,255,255,0.1); color: var(--text-muted); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem;">Mã thường</span>';
 
             let teamStatusBadge = '';
-            if (record.team_status === 'active') teamStatusBadge = '<span style="color: var(--success); font-size: 0.8rem;">● 正常</span>';
-            else if (record.team_status === 'full') teamStatusBadge = '<span style="color: var(--success); font-size: 0.8rem;">● 已满</span>';
-            else if (record.team_status === 'banned') teamStatusBadge = '<span style="color: var(--danger); font-size: 0.8rem;">● 封号</span>';
-            else if (record.team_status === 'error') teamStatusBadge = '<span style="color: var(--warning); font-size: 0.8rem;">● 异常</span>';
-            else if (record.team_status === 'expired') teamStatusBadge = '<span style="color: var(--text-muted); font-size: 0.8rem;">● 过期</span>';
-            else teamStatusBadge = `<span style="color: var(--text-muted); font-size: 0.8rem;">● ${record.team_status || '未知'}</span>`;
+            if (record.team_status === 'active') teamStatusBadge = '<span style="color: var(--success); font-size: 0.8rem;">● Đang hoạt động</span>';
+            else if (record.team_status === 'full') teamStatusBadge = '<span style="color: var(--success); font-size: 0.8rem;">● Đã đầy</span>';
+            else if (record.team_status === 'banned') teamStatusBadge = '<span style="color: var(--danger); font-size: 0.8rem;">● Bị khóa</span>';
+            else if (record.team_status === 'error') teamStatusBadge = '<span style="color: var(--warning); font-size: 0.8rem;">● Lỗi</span>';
+            else if (record.team_status === 'expired') teamStatusBadge = '<span style="color: var(--text-muted); font-size: 0.8rem;">● Hết hạn</span>';
+            else teamStatusBadge = `<span style="color: var(--text-muted); font-size: 0.8rem;">● ${record.team_status || 'Không rõ'}</span>`;
 
             return `
                             <div class="record-card" style="padding: 1rem; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 10px;">
@@ -456,43 +453,43 @@ function showWarrantyResult(data) {
                                 </div>
                                 <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 1rem; font-size: 0.9rem;">
                                     <div>
-                                        <div style="color: var(--text-muted); margin-bottom: 0.2rem;">加入 Team</div>
+                                        <div style="color: var(--text-muted); margin-bottom: 0.2rem;">Team đã tham gia</div>
                                          <div style="font-weight: 500; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-                                             <span>${escapeHtml(record.team_name || '未知 Team')}</span>
+                                             <span>${escapeHtml(record.team_name || 'Team không rõ')}</span>
                                              <span>${teamStatusBadge}</span>
                                              ${(record.has_warranty && record.warranty_valid && record.team_status === 'banned') ? `
                                              <button onclick="oneClickReplace('${escapeHtml(record.code)}', '${escapeHtml(record.email || currentEmail)}')" class="btn btn-xs btn-primary" style="padding: 2px 8px; font-size: 0.75rem; height: auto; min-height: 0;">
-                                                 一键换车
+                                                 Đổi Team ngay
                                              </button>
                                              ` : ''}
                                          </div>
                                      </div>
                                      <div>
-                                         <div style="color: var(--text-muted); margin-bottom: 0.2rem;">兑换时间</div>
+                                         <div style="color: var(--text-muted); margin-bottom: 0.2rem;">Thời gian đổi mã</div>
                                          <div>${formatDate(record.used_at)}</div>
                                      </div>
                                      <div style="grid-column: span 2;">
-                                         <div style="color: var(--text-muted); margin-bottom: 0.2rem;">Team 到期</div>
+                                         <div style="color: var(--text-muted); margin-bottom: 0.2rem;">Team hết hạn</div>
                                          <div style="font-weight: 500;">${formatDate(record.team_expires_at)}</div>
                                      </div>
                                     ${record.has_warranty ? `
                                     <div style="grid-column: span 2;">
-                                        <div style="color: var(--text-muted); margin-bottom: 0.2rem;">质保到期</div>
+                                        <div style="color: var(--text-muted); margin-bottom: 0.2rem;">Bảo hành hết hạn</div>
                                         <div style="${record.warranty_valid ? 'color: var(--success);' : 'color: var(--danger);'}">
-                                            ${record.warranty_expires_at ? `${formatDate(record.warranty_expires_at)} ${record.warranty_valid ? '(有效)' : '(已过期)'}` : '尚未开始计算 (首次使用后开启)'}
+                                            ${record.warranty_expires_at ? `${formatDate(record.warranty_expires_at)} ${record.warranty_valid ? '(Còn hiệu lực)' : '(Đã hết hạn)'}` : 'Chưa bắt đầu tính (kích hoạt sau lần sử dụng đầu tiên)'}
                                         </div>
                                     </div>
                                     ` : ''}
                                      <div style="grid-column: span 2; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.8rem; margin-top: 0.2rem;">
                                          <div>
-                                             <div style="color: var(--text-muted); margin-bottom: 0.2rem;">设备身份验证 (Codex)</div>
+                                             <div style="color: var(--text-muted); margin-bottom: 0.2rem;">Xác thực thiết bị (Codex)</div>
                                              <div style="font-weight: 500;">
-                                                 ${record.device_code_auth_enabled ? '<span style="color: var(--success);">已开启</span>' : '<span style="color: var(--warning);">未开启</span>'}
+                                                 ${record.device_code_auth_enabled ? '<span style="color: var(--success);">Đã bật</span>' : '<span style="color: var(--warning);">Chưa bật</span>'}
                                              </div>
                                          </div>
                                          ${(!record.device_code_auth_enabled && record.team_status !== 'banned' && record.team_status !== 'expired') ? `
                                          <button onclick="enableUserDeviceAuth(${record.team_id}, '${escapeHtml(record.code)}', '${escapeHtml(record.email)}')" class="btn btn-xs btn-primary" style="padding: 4px 10px; font-size: 0.75rem; height: auto;">
-                                             一键开启
+                                             Bật ngay
                                          </button>
                                          ` : ''}
                                      </div>
@@ -504,21 +501,21 @@ function showWarrantyResult(data) {
             </div>
         `;
 
-        // 3. 可重兑区域
+        // 3. Khu vực có thể đổi lại
         const canReuseHtml = data.can_reuse ? `
             <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(34, 197, 94, 0.1); border-radius: 12px; border: 1px solid rgba(34, 197, 94, 0.3);">
                 <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--success); margin-bottom: 0.8rem;">
                     <i data-lucide="check-circle" style="width: 20px; height: 20px;"></i> 
-                    <span style="font-weight: 600;">发现失效 Team，质保可触发</span>
+                    <span style="font-weight: 600;">Phát hiện Team đã hết hạn, có thể kích hoạt bảo hành</span>
                 </div>
                 <p style="margin: 0 0 1.2rem 0; color: var(--text-secondary); font-size: 0.95rem;">
-                    监测到您所在的 Team 已失效。由于您的质保码仍在有效期内，您可以立即复制兑换码进行重兑。
+                    Phát hiện Team bạn đang sử dụng đã hết hiệu lực. Do mã bảo hành của bạn vẫn còn trong thời hạn, bạn có thể sao chép mã đổi và đổi lại ngay.
                 </p>
                 <div style="display: flex; gap: 0.5rem; align-items: center;">
                     <input type="text" value="${escapeHtml(data.original_code)}" readonly 
                         style="flex: 1; padding: 0.75rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border-base); border-radius: 8px; color: var(--text-primary); font-family: monospace; font-size: 1.1rem;">
                     <button onclick="copyWarrantyCode('${escapeHtml(data.original_code)}')" class="btn btn-secondary" style="white-space: nowrap;">
-                        <i data-lucide="copy"></i> 复制
+                        <i data-lucide="copy"></i> Sao chép
                     </button>
                 </div>
             </div>
@@ -531,7 +528,7 @@ function showWarrantyResult(data) {
                 ${canReuseHtml}
                 <div style="margin-top: 2rem; text-align: center;">
                     <button onclick="backToStep1()" class="btn btn-secondary" style="width: 100%;">
-                        <i data-lucide="arrow-left"></i> 返回兑换
+                        <i data-lucide="arrow-left"></i> Quay lại đổi mã
                     </button>
                 </div>
             </div>
@@ -540,32 +537,32 @@ function showWarrantyResult(data) {
 
     if (window.lucide) lucide.createIcons();
 
-    // 显示质保结果区域
+    // Hiển thị khu vực kết quả bảo hành
     document.querySelectorAll('.step').forEach(step => step.style.display = 'none');
     document.getElementById('warrantyResult').style.display = 'block';
 }
 
-// 复制质保兑换码
+// Sao chép mã đổi bảo hành
 function copyWarrantyCode(code) {
     navigator.clipboard.writeText(code).then(() => {
-        showToast('兑换码已复制到剪贴板', 'success');
+        showToast('Đã sao chép mã đổi vào clipboard', 'success');
     }).catch(() => {
-        showToast('复制失败，请手动复制', 'error');
+        showToast('Sao chép thất bại, vui lòng sao chép thủ công', 'error');
     });
 }
 
-// 一键换车
+// Đổi Team ngay (một cú nhấp)
 async function oneClickReplace(code, email) {
     if (!code || !email) {
-        showToast('无法获取完整信息，请手动重试', 'error');
+        showToast('Không thể lấy đầy đủ thông tin, vui lòng thử thủ công', 'error');
         return;
     }
 
-    // 更新全局变量
+    // Cập nhật biến toàn cục
     currentEmail = email;
     currentCode = code;
 
-    // 填充Step1表单 (以便如果失败返回可以看到)
+    // Điền vào form bước 1 (để nếu thất bại người dùng quay lại vẫn thấy)
     const emailInput = document.getElementById('email');
     const codeInput = document.getElementById('code');
     if (emailInput) emailInput.value = email;
@@ -574,21 +571,21 @@ async function oneClickReplace(code, email) {
     const btn = event.currentTarget;
     const originalContent = btn.innerHTML;
 
-    // 禁用所有按钮防止重复提交
+    // Vô hiệu hóa tất cả nút để tránh gửi trùng lặp
     btn.disabled = true;
-    btn.innerHTML = '<i data-lucide="loader" class="spinning"></i> 处理中...';
+    btn.innerHTML = '<i data-lucide="loader" class="spinning"></i> Đang xử lý...';
     if (window.lucide) lucide.createIcons();
 
-    showToast('正在为您尝试自动兑换...', 'info');
+    showToast('Đang tự động đổi mã cho bạn...', 'info');
 
     try {
-        // 直接调用confirmRedeem，传入null表示自动选择Team
+        // Gọi confirmRedeem trực tiếp, truyền null để tự động chọn Team
         await confirmRedeem(null);
     } catch (e) {
         console.error(e);
-        showToast('一键换车请求失败', 'error');
+        showToast('Yêu cầu đổi Team thất bại', 'error');
     } finally {
-        // 如果页面未跳转（失败情况），恢复按钮
+        // Nếu trang không chuyển (trường hợp thất bại), khôi phục nút
         if (btn) {
             btn.disabled = false;
             btn.innerHTML = originalContent;
@@ -597,16 +594,16 @@ async function oneClickReplace(code, email) {
     }
 }
 
-// 用户一键开启设备身份验证
+// Người dùng bật xác thực thiết bị
 async function enableUserDeviceAuth(teamId, code, email) {
-    if (!confirm('确定要在该 Team 中开启设备代码身份验证吗？')) {
+    if (!confirm('Bạn có chắc muốn bật xác thực mã thiết bị trong Team này không?')) {
         return;
     }
 
     const btn = event.currentTarget;
     const originalContent = btn.innerHTML;
     btn.disabled = true;
-    btn.innerHTML = '<i data-lucide="loader" class="spinning"></i> 开启中...';
+    btn.innerHTML = '<i data-lucide="loader" class="spinning"></i> Đang bật...';
     if (window.lucide) lucide.createIcons();
 
     try {
@@ -624,40 +621,40 @@ async function enableUserDeviceAuth(teamId, code, email) {
 
         const data = await response.json();
         if (response.ok && data.success) {
-            showToast(data.message || '开启成功', 'success');
-            // 刷新当前状态
+            showToast(data.message || 'Bật thành công', 'success');
+            // Làm mới trạng thái hiện tại
             checkWarranty();
         } else {
-            showToast(data.error || data.detail || '开启失败', 'error');
+            showToast(data.error || data.detail || 'Bật thất bại', 'error');
             btn.disabled = false;
             btn.innerHTML = originalContent;
             if (window.lucide) lucide.createIcons();
         }
     } catch (error) {
-        showToast('网络错误，请稍后重试', 'error');
+        showToast('Lỗi kết nối, vui lòng thử lại sau', 'error');
         btn.disabled = false;
         btn.innerHTML = originalContent;
         if (window.lucide) lucide.createIcons();
     }
 }
 
-// 从成功页面跳转到质保查询
+// Chuyển từ trang thành công sang tra cứu bảo hành
 function goToWarrantyFromSuccess() {
     const warrantyInput = document.getElementById('warrantyInput');
-    // 优先填入邮箱，因为邮箱查询更全面
+    // Ưu tiên điền email vì tìm kiếm theo email toàn diện hơn
     warrantyInput.value = currentEmail || currentCode || '';
 
-    // 切换视图
+    // Chuyển view
     document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
     document.getElementById('step1').classList.add('active');
     document.getElementById('step3').style.display = 'none';
 
-    // 滚动到质保区域
+    // Cuộn đến khu vực bảo hành
     const warrantySection = document.querySelector('.warranty-section');
     if (warrantySection) {
         warrantySection.scrollIntoView({ behavior: 'smooth' });
     }
 
-    // 自动触发查询
+    // Tự động kích hoạt tra cứu
     checkWarranty();
 }

@@ -1,6 +1,6 @@
 """
-系统设置服务
-管理系统配置的读取、更新和缓存
+Dịch vụ cài đặt hệ thống
+Quản lý việc đọc, cập nhật và bộ nhớ đệm cấu hình hệ thống
 """
 from typing import Optional, Dict
 from sqlalchemy import select
@@ -12,28 +12,28 @@ logger = logging.getLogger(__name__)
 
 
 class SettingsService:
-    """系统设置服务类"""
+    """Lớp dịch vụ cài đặt hệ thống"""
 
     def __init__(self):
         self._cache: Dict[str, str] = {}
 
     async def get_setting(self, session: AsyncSession, key: str, default: Optional[str] = None) -> Optional[str]:
         """
-        获取单个配置项
+        Lấy một mục cấu hình
 
         Args:
-            session: 数据库会话
-            key: 配置项键名
-            default: 默认值
+            session: Phiên làm việc với cơ sở dữ liệu
+            key: Khóa cấu hình
+            default: Giá trị mặc định
 
         Returns:
-            配置项值,如果不存在则返回默认值
+            Giá trị cấu hình, nếu không tồn tại sẽ trả về giá trị mặc định
         """
-        # 先从缓存获取
+        # Lấy từ bộ nhớ đệm trước
         if key in self._cache:
             return self._cache[key]
 
-        # 从数据库获取
+        # Lấy từ cơ sở dữ liệu
         result = await session.execute(
             select(Setting).where(Setting.key == key)
         )
@@ -47,13 +47,13 @@ class SettingsService:
 
     async def get_all_settings(self, session: AsyncSession) -> Dict[str, str]:
         """
-        获取所有配置项
+        Lấy tất cả các mục cấu hình
 
         Args:
-            session: 数据库会话
+            session: Phiên làm việc với cơ sở dữ liệu
 
         Returns:
-            配置项字典
+            Từ điển các mục cấu hình
         """
         result = await session.execute(select(Setting))
         settings = result.scalars().all()
@@ -65,15 +65,15 @@ class SettingsService:
 
     async def update_setting(self, session: AsyncSession, key: str, value: str) -> bool:
         """
-        更新单个配置项
+        Cập nhật một mục cấu hình
 
         Args:
-            session: 数据库会话
-            key: 配置项键名
-            value: 配置项值
+            session: Phiên làm việc với cơ sở dữ liệu
+            key: Khóa cấu hình
+            value: Giá trị cấu hình
 
         Returns:
-            是否更新成功
+            Có cập nhật thành công hay không
         """
         try:
             result = await session.execute(
@@ -89,27 +89,27 @@ class SettingsService:
 
             await session.commit()
 
-            # 更新缓存
+            # Cập nhật bộ nhớ đệm
             self._cache[key] = value
 
-            logger.info(f"配置项 {key} 已更新")
+            logger.info(f"Cấu hình {key} đã được cập nhật")
             return True
 
         except Exception as e:
-            logger.error(f"更新配置项 {key} 失败: {e}")
+            logger.error(f"Cập nhật cấu hình {key} thất bại: {e}")
             await session.rollback()
             return False
 
     async def update_settings(self, session: AsyncSession, settings: Dict[str, str]) -> bool:
         """
-        批量更新配置项
+        Cập nhật hàng loạt các mục cấu hình
 
         Args:
-            session: 数据库会话
-            settings: 配置项字典
+            session: Phiên làm việc với cơ sở dữ liệu
+            settings: Từ điển các mục cấu hình
 
         Returns:
-            是否更新成功
+            Có cập nhật thành công hay không
         """
         try:
             for key, value in settings.items():
@@ -126,28 +126,28 @@ class SettingsService:
 
             await session.commit()
 
-            # 更新缓存
+            # Cập nhật bộ nhớ đệm
             self._cache.update(settings)
 
-            logger.info(f"批量更新了 {len(settings)} 个配置项")
+            logger.info(f"Đã cập nhật hàng loạt {len(settings)} mục cấu hình")
             return True
 
         except Exception as e:
-            logger.error(f"批量更新配置项失败: {e}")
+            logger.error(f"Cập nhật hàng loạt cấu hình thất bại: {e}")
             await session.rollback()
             return False
 
     def clear_cache(self):
-        """清空缓存"""
+        """Xóa sạch bộ nhớ đệm"""
         self._cache.clear()
-        logger.info("配置缓存已清空")
+        logger.info("Bộ nhớ đệm cấu hình đã được xóa")
 
     async def get_proxy_config(self, session: AsyncSession) -> Dict[str, str]:
         """
-        获取代理配置
+        Lấy cấu hình proxy
 
         Returns:
-            代理配置字典
+            Từ điển cấu hình proxy
         """
         proxy_enabled = await self.get_setting(session, "proxy_enabled", "false")
         proxy = await self.get_setting(session, "proxy", "")
@@ -164,15 +164,15 @@ class SettingsService:
         proxy: str = ""
     ) -> bool:
         """
-        更新代理配置
+        Cập nhật cấu hình proxy
 
         Args:
-            session: 数据库会话
-            enabled: 是否启用代理
-            proxy: 代理地址 (格式: http://host:port 或 socks5://host:port)
+            session: Phiên làm việc với cơ sở dữ liệu
+            enabled: Có bật proxy hay không
+            proxy: Địa chỉ proxy (định dạng: http://host:port hoặc socks5://host:port)
 
         Returns:
-            是否更新成功
+            Có cập nhật thành công hay không
         """
         settings = {
             "proxy_enabled": str(enabled).lower(),
@@ -183,38 +183,38 @@ class SettingsService:
 
     async def get_log_level(self, session: AsyncSession) -> str:
         """
-        获取日志级别
+        Lấy cấp độ log
 
         Returns:
-            日志级别
+            Cấp độ log
         """
         return await self.get_setting(session, "log_level", "INFO")
 
     async def update_log_level(self, session: AsyncSession, level: str) -> bool:
         """
-        更新日志级别
+        Cập nhật cấp độ log
 
         Args:
-            session: 数据库会话
-            level: 日志级别 (DEBUG/INFO/WARNING/ERROR/CRITICAL)
+            session: Phiên làm việc với cơ sở dữ liệu
+            level: Cấp độ log (DEBUG/INFO/WARNING/ERROR/CRITICAL)
 
         Returns:
-            是否更新成功
+            Có cập nhật thành công hay không
         """
         valid_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
         if level.upper() not in valid_levels:
-            logger.error(f"无效的日志级别: {level}")
+            logger.error(f"Cấp độ log không hợp lệ: {level}")
             return False
 
         success = await self.update_setting(session, "log_level", level.upper())
 
         if success:
-            # 动态更新日志级别
+            # Cập nhật động cấp độ log
             logging.getLogger().setLevel(level.upper())
-            logger.info(f"日志级别已更新为: {level.upper()}")
+            logger.info(f"Cấp độ log đã được cập nhật thành: {level.upper()}")
 
         return success
 
 
-# 创建全局实例
+# Tạo instance toàn cục
 settings_service = SettingsService()

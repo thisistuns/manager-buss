@@ -1,6 +1,6 @@
 """
-API 路由
-处理 AJAX 请求的 API 端点
+Route API
+Xử lý các endpoint API cho yêu cầu AJAX
 """
 import logging
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -13,13 +13,13 @@ from app.services.team import TeamService
 
 logger = logging.getLogger(__name__)
 
-# 创建路由器
+# Tạo router
 router = APIRouter(
     prefix="/api",
     tags=["api"]
 )
 
-# 服务实例
+# Instance dịch vụ
 team_service = TeamService()
 
 
@@ -31,19 +31,19 @@ async def refresh_team(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    刷新 Team 信息
+    Làm mới thông tin Team
 
     Args:
-        team_id: Team ID
-        force: 是否强制刷新 Token
-        db: 数据库会话
-        current_user: 当前用户（需要登录）
+        team_id: ID của Team
+        force: Có ép buộc làm mới Token hay không
+        db: Phiên truy cập database
+        current_user: Người dùng hiện tại (yêu cầu đăng nhập)
 
     Returns:
-        刷新结果
+        Kết quả làm mới
     """
     try:
-        logger.info(f"刷新 Team {team_id} 信息, force={force}")
+        logger.info(f"Làm mới thông tin Team {team_id}, force={force}")
 
         result = await team_service.sync_team_info(team_id, db, force_refresh=force)
 
@@ -56,11 +56,11 @@ async def refresh_team(
         return JSONResponse(content=result)
 
     except Exception as e:
-        logger.error(f"刷新 Team 失败: {e}")
+        logger.error(f"Làm mới Team thất bại: {e}")
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={
                 "success": False,
-                "error": f"刷新 Team 失败: {str(e)}"
+                "error": f"Làm mới Team thất bại: {str(e)}"
             }
         )

@@ -1,101 +1,92 @@
 {% extends "base.html" %}
 
-{% block title %}使用记录 - GPT Team 管理系统{% endblock %}
+{% block title %}Lịch sử Sử dụng - Hệ thống Quản lý GPT Team{% endblock %}
 
 {% block content %}
 <div class="page-header">
-    <h2>使用记录</h2>
+    <h2>Lịch sử Sử dụng</h2>
 </div>
 
-<!-- 统计卡片 -->
 <div class="stats-container">
     <div class="stat-card">
         <div class="stat-icon">📝</div>
         <div class="stat-content">
             <div class="stat-value">{{ stats.total }}</div>
-            <div class="stat-label">总记录数</div>
+            <div class="stat-label">Tổng số giao dịch</div>
         </div>
     </div>
     <div class="stat-card stat-info">
         <div class="stat-icon">📅</div>
         <div class="stat-content">
             <div class="stat-value">{{ stats.today }}</div>
-            <div class="stat-label">今日使用</div>
+            <div class="stat-label">Hôm nay</div>
         </div>
     </div>
     <div class="stat-card stat-success">
         <div class="stat-icon">📊</div>
         <div class="stat-content">
             <div class="stat-value">{{ stats.this_week }}</div>
-            <div class="stat-label">本周使用</div>
+            <div class="stat-label">Tuần này</div>
         </div>
     </div>
     <div class="stat-card stat-warning">
         <div class="stat-icon">📈</div>
         <div class="stat-content">
             <div class="stat-value">{{ stats.this_month }}</div>
-            <div class="stat-label">本月使用</div>
+            <div class="stat-label">Tháng này</div>
         </div>
     </div>
 </div>
 
-<!-- 搜索和筛选 -->
 <div class="content-section">
     <div class="section-header">
-        <h3><i data-lucide="search"></i> 搜索筛选</h3>
+        <h3><i data-lucide="search"></i> Tìm kiếm & Lọc</h3>
     </div>
 
     <form method="get" action="/admin/records" class="search-form-grid">
         <div class="form-group">
-            <label for="email">用户邮箱</label>
-            <input type="text" id="email" name="email" value="{{ filters.email or '' }}" placeholder="输入邮箱搜索"
-                class="form-control">
+            <label for="email">Email người dùng</label>
+            <input type="text" id="email" name="email" value="{{ filters.email or '' }}" placeholder="Nhập email tìm kiếm" class="form-control">
         </div>
         <div class="form-group">
-            <label for="code">兑换码</label>
-            <input type="text" id="code" name="code" value="{{ filters.code or '' }}" placeholder="输入兑换码搜索"
-                class="form-control">
+            <label for="code">Mã đổi</label>
+            <input type="text" id="code" name="code" value="{{ filters.code or '' }}" placeholder="Nhập mã đổi tìm kiếm" class="form-control">
         </div>
         <div class="form-group">
             <label for="team_id">Team ID</label>
-            <input type="number" id="team_id" name="team_id" value="{{ filters.team_id or '' }}" placeholder="输入Team ID"
-                class="form-control">
+            <input type="number" id="team_id" name="team_id" value="{{ filters.team_id or '' }}" placeholder="Nhập Team ID" class="form-control">
         </div>
         <div class="form-group">
-            <label for="start_date">开始日期</label>
-            <input type="date" id="start_date" name="start_date" value="{{ filters.start_date or '' }}"
-                class="form-control">
+            <label for="start_date">Từ ngày</label>
+            <input type="date" id="start_date" name="start_date" value="{{ filters.start_date or '' }}" class="form-control">
         </div>
         <div class="form-group">
-            <label for="end_date">结束日期</label>
+            <label for="end_date">Đến ngày</label>
             <input type="date" id="end_date" name="end_date" value="{{ filters.end_date or '' }}" class="form-control">
         </div>
         <div class="form-actions" style="display: flex; gap: 0.5rem;">
             <button type="submit" class="btn btn-primary" style="flex: 1;">
-                <i data-lucide="search" style="width: 16px; height: 16px;"></i> 搜索
+                <i data-lucide="search" style="width: 16px; height: 16px;"></i> Tìm kiếm
             </button>
             <a href="/admin/records" class="btn btn-secondary">
-                <i data-lucide="rotate-ccw" style="width: 16px; height: 16px;"></i> 重置
+                <i data-lucide="rotate-ccw" style="width: 16px; height: 16px;"></i> Đặt lại
             </a>
         </div>
     </form>
 </div>
 
-<!-- 使用记录列表 -->
 <div class="content-section">
     <div class="section-header">
         <div style="display: flex; align-items: center; gap: 1rem;">
-            <h3>使用记录列表</h3>
-            <span class="badge badge-info">{{ pagination.total }} 条记录</span>
+            <h3>Danh sách giao dịch</h3>
+            <span class="badge badge-info">{{ pagination.total }} giao dịch</span>
         </div>
         <div class="header-group">
             <div class="dropdown-wrapper">
                 <button class="btn btn-secondary dropdown-toggle" onclick="toggleDropdown('columnToggleDropdown')">
-                    <i data-lucide="columns" style="width: 16px; height: 16px;"></i> 列设置
+                    <i data-lucide="columns" style="width: 16px; height: 16px;"></i> Tùy chỉnh cột
                 </button>
-                <div id="columnToggleDropdown" class="dropdown-menu">
-                    <!-- Column checkboxes will be generated here -->
-                </div>
+                <div id="columnToggleDropdown" class="dropdown-menu"></div>
             </div>
         </div>
     </div>
@@ -106,13 +97,13 @@
             <thead>
                 <tr>
                     <th>ID</th>
-                    <th>用户邮箱</th>
-                    <th>兑换码</th>
-                    <th>Team名称</th>
+                    <th>Email người dùng</th>
+                    <th>Mã đổi</th>
+                    <th>Tên Team</th>
                     <th>Team ID</th>
                     <th>Account ID</th>
-                    <th style="text-align: right;">兑换时间</th>
-                    <th style="text-align: right;">操作</th>
+                    <th style="text-align: right;">Thời gian đổi</th>
+                    <th style="text-align: right;">Thao tác</th>
                 </tr>
             </thead>
             <tbody>
@@ -123,13 +114,11 @@
                     <td><code>{{ record.code }}</code></td>
                     <td>{{ record.team_name or '-' }}</td>
                     <td><span class="badge badge-secondary">{{ record.team_id }}</span></td>
-                    <td><code class="account-id" title="{{ record.account_id }}">{{ record.account_id[:8] }}...</code>
-                    </td>
+                    <td><code class="account-id" title="{{ record.account_id }}">{{ record.account_id[:8] }}...</code></td>
                     <td style="text-align: right;">{{ record.redeemed_at }}</td>
                     <td style="text-align: right;">
-                        <button onclick="withdrawRecord('{{ record.id }}', '{{ record.email }}')"
-                            class="btn btn-sm btn-danger" title="撤回邀请并恢复兑换码">
-                            <i data-lucide="undo-2" style="width: 14px; height: 14px;"></i> 撤回
+                        <button onclick="withdrawRecord('{{ record.id }}', '{{ record.email }}')" class="btn btn-sm btn-danger" title="Thu hồi lời mời và khôi phục mã đổi">
+                            <i data-lucide="undo-2" style="width: 14px; height: 14px;"></i> Thu hồi
                         </button>
                     </td>
                 </tr>
@@ -138,11 +127,10 @@
         </table>
     </div>
 
-    <!-- 分页 -->
     {% if pagination %}
     <div class="pagination">
         <div class="per-page-selector">
-            每页
+            Mỗi trang
             <select class="per-page-select" onchange="changePerPage(this.value)">
                 <option value="20" {% if pagination.per_page==20 %}selected{% endif %}>20</option>
                 <option value="50" {% if pagination.per_page==50 %}selected{% endif %}>50</option>
@@ -154,83 +142,50 @@
         {% set query_params = [] %}
         {% if filters.email %}{% set _ = query_params.append('email=' + filters.email|urlencode) %}{% endif %}
         {% if filters.code %}{% set _ = query_params.append('code=' + filters.code|urlencode) %}{% endif %}
-        {% if filters.team_id %}{% set _ = query_params.append('team_id=' + filters.team_id|string|urlencode) %}{% endif
-        %}
+        {% if filters.team_id %}{% set _ = query_params.append('team_id=' + filters.team_id|string|urlencode) %}{% endif %}
         {% if filters.start_date %}{% set _ = query_params.append('start_date=' + filters.start_date) %}{% endif %}
         {% if filters.end_date %}{% set _ = query_params.append('end_date=' + filters.end_date) %}{% endif %}
-        {% if pagination.per_page != 20 %}{% set _ = query_params.append('per_page=' + pagination.per_page|string) %}{%
-        endif %}
-
+        {% if pagination.per_page != 20 %}{% set _ = query_params.append('per_page=' + pagination.per_page|string) %}{% endif %}
         {% set base_query = '&' + query_params|join('&') if query_params else '' %}
 
         <div class="pagination-controls">
-            <!-- 首页 -->
-            <a href="?page=1{{ base_query }}"
-                class="btn btn-sm btn-secondary {% if pagination.current_page == 1 %}disabled{% endif %}" title="首页">
+            <a href="?page=1{{ base_query }}" class="btn btn-sm btn-secondary {% if pagination.current_page == 1 %}disabled{% endif %}" title="Trang đầu">
                 <i data-lucide="chevrons-left" style="width: 14px; height: 14px;"></i>
             </a>
 
-            <!-- 上一页 -->
             {% if pagination.current_page > 1 %}
-            <a href="?page={{ pagination.current_page - 1 }}{{ base_query }}" class="btn btn-sm btn-secondary"
-                title="上一页">
+            <a href="?page={{ pagination.current_page - 1 }}{{ base_query }}" class="btn btn-sm btn-secondary" title="Trang trước">
                 <i data-lucide="chevron-left" style="width: 14px; height: 14px;"></i>
             </a>
             {% else %}
-            <button class="btn btn-sm btn-secondary" disabled>
-                <i data-lucide="chevron-left" style="width: 14px; height: 14px;"></i>
-            </button>
+            <button class="btn btn-sm btn-secondary" disabled><i data-lucide="chevron-left" style="width: 14px; height: 14px;"></i></button>
             {% endif %}
 
-            <!-- 页码 -->
             <div class="pagination-numbers">
                 {% set start_page = pagination.current_page - 2 %}
                 {% set end_page = pagination.current_page + 2 %}
-
-                {% if start_page < 1 %} {% set end_page=end_page + (1 - start_page) %} {% set start_page=1 %} {% endif
-                    %} {% if end_page> pagination.total_pages %}
-                    {% set start_page = start_page - (end_page - pagination.total_pages) %}
-                    {% set end_page = pagination.total_pages %}
-                    {% if start_page < 1 %} {% set start_page=1 %} {% endif %} {% endif %} {% if start_page> 1 %}
-                        <a href="?page=1{{ base_query }}" class="page-number">1</a>
-                        {% if start_page > 2 %}
-                        <span class="page-dots">...</span>
-                        {% endif %}
-                        {% endif %}
-
-                        {% for p in range(start_page, end_page + 1) %}
-                        <a href="?page={{ p }}{{ base_query }}"
-                            class="page-number {% if p == pagination.current_page %}active{% endif %}">{{ p }}</a>
-                        {% endfor %}
-
-                        {% if end_page < pagination.total_pages %} {% if end_page < pagination.total_pages - 1 %} <span
-                            class="page-dots">...</span>
-                            {% endif %}
-                            <a href="?page={{ pagination.total_pages }}{{ base_query }}" class="page-number">{{
-                                pagination.total_pages }}</a>
-                            {% endif %}
+                {% if start_page < 1 %}{% set end_page=end_page + (1 - start_page) %}{% set start_page=1 %}{% endif %}
+                {% if end_page > pagination.total_pages %}{% set start_page = start_page - (end_page - pagination.total_pages) %}{% set end_page = pagination.total_pages %}{% if start_page < 1 %}{% set start_page=1 %}{% endif %}{% endif %}
+                {% if start_page > 1 %}<a href="?page=1{{ base_query }}" class="page-number">1</a>{% if start_page > 2 %}<span class="page-dots">...</span>{% endif %}{% endif %}
+                {% for p in range(start_page, end_page + 1) %}
+                <a href="?page={{ p }}{{ base_query }}" class="page-number {% if p == pagination.current_page %}active{% endif %}">{{ p }}</a>
+                {% endfor %}
+                {% if end_page < pagination.total_pages %}{% if end_page < pagination.total_pages - 1 %}<span class="page-dots">...</span>{% endif %}<a href="?page={{ pagination.total_pages }}{{ base_query }}" class="page-number">{{ pagination.total_pages }}</a>{% endif %}
             </div>
 
-            <!-- 下一页 -->
-            {% if pagination.current_page < pagination.total_pages %} <a
-                href="?page={{ pagination.current_page + 1 }}{{ base_query }}" class="btn btn-sm btn-secondary"
-                title="下一页">
+            {% if pagination.current_page < pagination.total_pages %}
+            <a href="?page={{ pagination.current_page + 1 }}{{ base_query }}" class="btn btn-sm btn-secondary" title="Trang sau">
                 <i data-lucide="chevron-right" style="width: 14px; height: 14px;"></i>
-                </a>
-                {% else %}
-                <button class="btn btn-sm btn-secondary" disabled>
-                    <i data-lucide="chevron-right" style="width: 14px; height: 14px;"></i>
-                </button>
-                {% endif %}
+            </a>
+            {% else %}
+            <button class="btn btn-sm btn-secondary" disabled><i data-lucide="chevron-right" style="width: 14px; height: 14px;"></i></button>
+            {% endif %}
 
-                <!-- 末页 -->
-                <a href="?page={{ pagination.total_pages }}{{ base_query }}"
-                    class="btn btn-sm btn-secondary {% if pagination.current_page == pagination.total_pages %}disabled{% endif %}"
-                    title="末页">
-                    <i data-lucide="chevrons-right" style="width: 14px; height: 14px;"></i>
-                </a>
+            <a href="?page={{ pagination.total_pages }}{{ base_query }}" class="btn btn-sm btn-secondary {% if pagination.current_page == pagination.total_pages %}disabled{% endif %}" title="Trang cuối">
+                <i data-lucide="chevrons-right" style="width: 14px; height: 14px;"></i>
+            </a>
         </div>
-        <span class="pagination-info" style="margin-left: 1rem;">共 {{ pagination.total }} 条</span>
+        <span class="pagination-info" style="margin-left: 1rem;">Tổng cộng {{ pagination.total }} giao dịch</span>
         {% endif %}
     </div>
     {% endif %}
@@ -238,7 +193,7 @@
     {% else %}
     <div class="empty-state">
         <i data-lucide="clipboard-list" style="width: 48px; height: 48px; margin-bottom: 1rem; opacity: 0.2;"></i>
-        <p>暂无使用记录</p>
+        <p>Chưa có lịch sử sử dụng</p>
     </div>
     {% endif %}
 </div>
@@ -246,135 +201,68 @@
 
 {% block extra_css %}
 <style>
-    .spin {
-        animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-        from {
-            transform: rotate(0deg);
-        }
-
-        to {
-            transform: rotate(360deg);
-        }
-    }
+    .spin { animation: spin 1s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 </style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
     async function withdrawRecord(recordId, email) {
-        if (!confirm(`确定要撤回针对 ${email} 的兑换记录吗？\n\n这将执行以下操作：\n1. 在 ChatGPT Team 中撤回邀请或删除成员\n2. 恢复对应的兑换码为“未使用”状态\n3. 删除此条使用记录`)) {
-            return;
-        }
-
+        if (!confirm(`Bạn có chắc muốn thu hồi giao dịch của "${email}" không?\n\nHành động này sẽ:\n1. Thu hồi lời mời hoặc xóa thành viên khỏi ChatGPT Team\n2. Đặt lại mã đổi thành trạng thái "Chưa dùng"\n3. Xóa giao dịch này`)) return;
         try {
-            // 获取当前点击的按钮
             const btn = event.currentTarget;
             const originalContent = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = '<i data-lucide="loader-2" class="spin" style="width: 14px; height: 14px;"></i> 处理中...';
+            btn.innerHTML = '<i data-lucide="loader-2" class="spin" style="width: 14px; height: 14px;"></i> Đang xử lý...';
             lucide.createIcons();
-
-            const response = await fetch(`/admin/records/${recordId}/withdraw`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-
+            const response = await fetch(`/admin/records/${recordId}/withdraw`, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
             const result = await response.json();
-
-            if (result.success) {
-                showToast(result.message || '撤回成功', 'success');
-                // 刷新页面或移除该行
-                setTimeout(() => location.reload(), 1000);
-            } else {
-                showToast(result.error || '撤回失败', 'error');
-                btn.disabled = false;
-                btn.innerHTML = originalContent;
-                lucide.createIcons();
-            }
+            if (result.success) { showToast(result.message || 'Thu hồi thành công', 'success'); setTimeout(() => location.reload(), 1000); }
+            else { showToast(result.error || 'Thu hồi thất bại', 'error'); btn.disabled = false; btn.innerHTML = originalContent; lucide.createIcons(); }
         } catch (error) {
-            console.error('撤回失败:', error);
-            showToast('请求失败，请检查网络或日志', 'error');
-            // 如果出错，尝试恢复按钮
-            if (event && event.currentTarget) {
-                event.currentTarget.disabled = false;
-            }
+            console.error('Thu hồi thất bại:', error);
+            showToast('Yêu cầu thất bại, vui lòng kiểm tra mạng hoặc log', 'error');
+            if (event && event.currentTarget) event.currentTarget.disabled = false;
         }
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-        // Init Column Toggler
-        initColumnToggler('.data-table', 'records_list_columns');
-    });
+    document.addEventListener('DOMContentLoaded', () => { initColumnToggler('.data-table', 'records_list_columns'); });
 
-    // Column Toggler Logic & Pagination
     function initColumnToggler(tableSelector, storageKey) {
         const table = document.querySelector(tableSelector);
         if (!table) return;
-
         const headers = table.querySelectorAll('thead th');
         const container = document.getElementById('columnToggleDropdown');
         if (!container) return;
-
-        container.innerHTML = '<div class="dropdown-header">显示/隐藏列</div>';
-
-        // Load saved preferences
+        container.innerHTML = '<div class="dropdown-header">Hiển thị/Ẩn cột</div>';
         const saved = JSON.parse(localStorage.getItem(storageKey) || '[]');
-
         headers.forEach((th, index) => {
             const text = th.innerText.trim();
-            if (!text || text === '操作' || th.querySelector('input')) return; // Checkbox column or Action
-
+            if (!text || text === 'Thao tác' || th.querySelector('input')) return;
             const isVisible = !saved.includes(index);
-            if (!isVisible) {
-                th.style.display = 'none';
-                table.querySelectorAll(`tbody tr td:nth-child(${index + 1})`).forEach(td => td.style.display = 'none');
-            }
-
+            if (!isVisible) { th.style.display = 'none'; table.querySelectorAll(`tbody tr td:nth-child(${index + 1})`).forEach(td => td.style.display = 'none'); }
             const item = document.createElement('label');
             item.className = 'dropdown-item';
-            item.innerHTML = `
-                <input type="checkbox" ${isVisible ? 'checked' : ''}>
-                <span>${text}</span>
-            `;
-
+            item.innerHTML = `<input type="checkbox" ${isVisible ? 'checked' : ''}><span>${text}</span>`;
             item.querySelector('input').addEventListener('change', (e) => {
                 const checked = e.target.checked;
-                // Toggle header
                 th.style.display = checked ? '' : 'none';
-                // Toggle cells
                 table.querySelectorAll(`tbody tr td:nth-child(${index + 1})`).forEach(td => td.style.display = checked ? '' : 'none');
-
-                // Save to localStorage
                 const currentSaved = JSON.parse(localStorage.getItem(storageKey) || '[]');
-                if (checked) {
-                    const idx = currentSaved.indexOf(index);
-                    if (idx > -1) currentSaved.splice(idx, 1);
-                } else {
-                    if (!currentSaved.includes(index)) currentSaved.push(index);
-                }
+                if (checked) { const idx = currentSaved.indexOf(index); if (idx > -1) currentSaved.splice(idx, 1); }
+                else { if (!currentSaved.includes(index)) currentSaved.push(index); }
                 localStorage.setItem(storageKey, JSON.stringify(currentSaved));
             });
-
             container.appendChild(item);
         });
     }
 
     function toggleDropdown(id) {
         const el = document.getElementById(id);
-        if (el) {
-            el.classList.toggle('show');
-            document.querySelectorAll('.dropdown-menu').forEach(d => {
-                if (d.id !== id) d.classList.remove('show');
-            });
-        }
+        if (el) { el.classList.toggle('show'); document.querySelectorAll('.dropdown-menu').forEach(d => { if (d.id !== id) d.classList.remove('show'); }); }
     }
 
-    // Close dropdowns
     document.addEventListener('click', (e) => {
         if (!e.target.closest('.dropdown-wrapper') && !e.target.closest('.dropdown-toggle')) {
             document.querySelectorAll('.dropdown-menu').forEach(d => d.classList.remove('show'));

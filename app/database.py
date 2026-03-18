@@ -1,25 +1,25 @@
 """
-数据库连接模块
-SQLite 异步连接配置和会话管理
+Module kết nối cơ sở dữ liệu
+Cấu hình kết nối bất đồng bộ SQLite và quản lý phiên (session)
 """
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import declarative_base
 from app.config import settings
 
-# 创建异步引擎
+# Tạo engine bất đồng bộ
 engine = create_async_engine(
     settings.database_url,
-    echo=settings.database_echo,  # 控制是否打印 SQL
+    echo=settings.database_echo,  # Kiểm soát việc in SQL
     future=True,
-    connect_args={"timeout": 60},  # 增大连接超时
-    pool_size=50,                  # 基准连接池大小
-    max_overflow=100,              # 最大允许溢出的连接数
-    pool_recycle=3600,             # 每小时回收连接防止失效
-    pool_pre_ping=True             # 每次使用连接前进行活跃性检测
+    connect_args={"timeout": 60},  # Tăng thời gian chờ (timeout) kết nối
+    pool_size=50,                  # Kích thước cơ bản của connection pool
+    max_overflow=100,              # Số lượng connection vượt quá tối đa cho phép
+    pool_recycle=3600,             # Tái chế connection mỗi giờ để tránh lỗi hết hạn
+    pool_pre_ping=True             # Kiểm tra tính hoạt động (ping) trước khi dùng connection
 )
 
-# 创建异步会话工厂
+# Tạo factory cho session bất đồng bộ
 AsyncSessionLocal = async_sessionmaker(
     engine,
     class_=AsyncSession,
@@ -28,14 +28,14 @@ AsyncSessionLocal = async_sessionmaker(
     autoflush=False
 )
 
-# 创建 Base 类
+# Tạo lớp Base
 Base = declarative_base()
 
 
 async def get_db() -> AsyncSession:
     """
-    获取数据库会话
-    用于 FastAPI 依赖注入
+    Lấy phiên (session) kết nối cơ sở dữ liệu
+    Dùng cho fastapi dependency injection
     """
     async with AsyncSessionLocal() as session:
         try:
@@ -46,8 +46,8 @@ async def get_db() -> AsyncSession:
 
 async def init_db():
     """
-    初始化数据库
-    创建所有表
+    Khởi tạo cơ sở dữ liệu
+    Tạo tất cả các bảng
     """
     async with engine.begin() as conn:
         await conn.execute(text("PRAGMA journal_mode=WAL"))
@@ -56,6 +56,6 @@ async def init_db():
 
 async def close_db():
     """
-    关闭数据库连接
+    Đóng kết nối cơ sở dữ liệu
     """
     await engine.dispose()

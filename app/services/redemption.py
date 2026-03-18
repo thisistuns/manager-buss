@@ -1,6 +1,6 @@
 """
-兑换码管理服务
-用于管理兑换码的生成、验证、使用和查询
+Dịch vụ quản lý mã đổi
+Dùng để quản lý việc tạo, xác minh, sử dụng và tra cứu mã đổi
 """
 import logging
 import secrets
@@ -18,10 +18,10 @@ logger = logging.getLogger(__name__)
 
 
 class RedemptionService:
-    """兑换码管理服务类"""
+    """Lớp dịch vụ quản lý mã đổi"""
 
     def __init__(self):
-        """初始化兑换码管理服务"""
+        """Khởi tạo dịch vụ quản lý mã đổi"""
         pass
 
     def _generate_random_code(self, length: int = 16) -> str:

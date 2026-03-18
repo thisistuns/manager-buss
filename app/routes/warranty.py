@@ -1,6 +1,6 @@
 """
-质保相关路由
-处理用户质保查询请求
+Các route liên quan đến bảo hành
+Xử lý các yêu cầu tra cứu bảo hành của người dùng
 """
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, EmailStr
@@ -17,13 +17,13 @@ router = APIRouter(
 
 
 class WarrantyCheckRequest(BaseModel):
-    """质保查询请求"""
+    """Yêu cầu tra cứu bảo hành"""
     email: Optional[EmailStr] = None
     code: Optional[str] = None
 
 
 class WarrantyCheckRecord(BaseModel):
-    """质保查询单条记录"""
+    """Bản ghi đơn lẻ khi tra cứu bảo hành"""
     code: str
     has_warranty: bool
     warranty_valid: bool
@@ -39,7 +39,7 @@ class WarrantyCheckRecord(BaseModel):
 
 
 class WarrantyCheckResponse(BaseModel):
-    """质保查询响应"""
+    """Phản hồi tra cứu bảo hành"""
     success: bool
     has_warranty: bool
     warranty_valid: bool
@@ -58,19 +58,19 @@ async def check_warranty(
     db_session: AsyncSession = Depends(get_db)
 ):
     """
-    检查质保状态
+    Kiểm tra trạng thái bảo hành
     
-    用户可以通过邮箱或兑换码查询质保状态
+    Người dùng có thể tra cứu trạng thái bảo hành qua email hoặc mã đổi
     """
     try:
-        # 验证至少提供一个参数
+        # Xác minh ít nhất một tham số được cung cấp
         if not request.email and not request.code:
             raise HTTPException(
                 status_code=400,
-                detail="必须提供邮箱或兑换码"
+                detail="Phải cung cấp email hoặc mã đổi"
             )
         
-        # 调用质保服务
+        # Gọi dịch vụ bảo hành
         result = await warranty_service.check_warranty_status(
             db_session,
             email=request.email,
@@ -80,7 +80,7 @@ async def check_warranty(
         if not result["success"]:
             raise HTTPException(
                 status_code=500,
-                detail=result.get("error", "查询失败")
+                detail=result.get("error", "Tra cứu thất bại")
             )
         
         return WarrantyCheckResponse(
@@ -101,12 +101,12 @@ async def check_warranty(
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"查询质保状态失败: {str(e)}"
+            detail=f"Kiểm tra trạng thái bảo hành thất bại: {str(e)}"
         )
 
 
 class EnableDeviceAuthRequest(BaseModel):
-    """开启设备身份验证请求"""
+    """Yêu cầu bật xác thực danh tính thiết bị"""
     code: str
     email: str
     team_id: int
@@ -118,14 +118,14 @@ async def enable_device_auth(
     db_session: AsyncSession = Depends(get_db)
 ):
     """
-    用户一键开启设备身份验证
+    Bật xác thực danh tính thiết bị bằng một click
     """
     from app.services.team import team_service
     from sqlalchemy import select
     from app.models import RedemptionRecord
 
     try:
-        # 1. 验证用户是否有记录在该 Team
+        # 1. Xác minh có ghi nhận người dùng trong Team hay không
         stmt = select(RedemptionRecord).where(
             RedemptionRecord.code == request.code,
             RedemptionRecord.email == request.email,
@@ -137,25 +137,25 @@ async def enable_device_auth(
         if not record:
             raise HTTPException(
                 status_code=403,
-                detail="未找到相关的兑换记录，无法进行该操作"
+                detail="Không tìm thấy bản ghi đổi mã liên quan, không thể thực hiện thao tác"
             )
             
-        # 2. 调用 TeamService 开启
-        # 注意：这里我们使用已经实现的 enable_device_code_auth
+        # 2. Gọi TeamService để bật
+        # Lưu ý: ở đây chúng ta dùng enable_device_code_auth đã được implement
         res = await team_service.enable_device_code_auth(request.team_id, db_session)
         
         if not res.get("success"):
             raise HTTPException(
                 status_code=500,
-                detail=res.get("error", "开启失败")
+                detail=res.get("error", "Bật tính năng thất bại")
             )
             
-        return {"success": True, "message": "设备代码身份验证开启成功"}
+        return {"success": True, "message": "Bật xác thực thiết bị thành công"}
         
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"开启失败: {str(e)}"
+            detail=f"Bật tính năng thất bại: {str(e)}"
         )

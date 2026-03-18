@@ -1,6 +1,6 @@
 """
-GPT Team 管理和兑换码自动邀请系统
-FastAPI 应用入口文件
+Hệ thống Quản lý GPT Team và Mã đổi Tự động Mời
+File khởi động ứng dụng FastAPI
 """
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
@@ -12,13 +12,13 @@ from pathlib import Path
 from datetime import datetime
 
 from contextlib import asynccontextmanager
-# 导入路由
+# Nhập các route
 from app.routes import redeem, auth, admin, api, user, warranty
 from app.config import settings
 from app.database import init_db, close_db, AsyncSessionLocal
 from app.services.auth import auth_service
 
-# 获取项目根目录
+# Lấy thư mục gốc của project
 BASE_DIR = Path(__file__).resolve().parent.parent
 APP_DIR = BASE_DIR / "app"
 
@@ -27,103 +27,103 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
-    应用生命周期管理
-    启动时初始化数据库，关闭时释放资源
+    Quản lý vòng đời ứng dụng
+    Khởi tạo database khi bật, giải phóng tài nguyên khi tắt
     """
-    logger.info("系统正在启动，正在初始化数据库...")
+    logger.info("Hệ thống đang khởi động, đang khởi tạo database...")
     try:
-        # 0. 确保数据库目录存在
+        # 0. Đảm bảo thư mục database tồn tại
         db_file = settings.database_url.split("///")[-1]
         Path(db_file).parent.mkdir(parents=True, exist_ok=True)
         
-        # 1. 创建数据库表
+        # 1. Tạo bảng database
         await init_db()
         
-        # 2. 运行自动数据库迁移
+        # 2. Chạy migration database tự động
         from app.db_migrations import run_auto_migration
         run_auto_migration()
         
-        # 3. 初始化管理员密码（如果不存在）
+        # 3. Khởi tạo mật khẩu admin (nếu chưa tồn tại)
         async with AsyncSessionLocal() as session:
             await auth_service.initialize_admin_password(session)
-        logger.info("数据库初始化完成")
+        logger.info("Khởi tạo database hoàn tất")
     except Exception as e:
-        logger.error(f"数据库初始化失败: {e}")
+        logger.error(f"Khởi tạo database thất bại: {e}")
     
     yield
     
-    # 关闭连接
+    # Đóng kết nối
     await close_db()
-    logger.info("系统正在关闭，已释放数据库连接")
+    logger.info("Hệ thống đang tắt, đã giải phóng kết nối database")
 
 
-# 创建 FastAPI 应用实例
+# Tạo instance ứng dụng FastAPI
 app = FastAPI(
-    title="GPT Team 管理系统",
-    description="ChatGPT Team 账号管理和兑换码自动邀请系统",
+    title="Hệ thống Quản lý GPT Team",
+    description="Hệ thống quản lý tài khoản ChatGPT Team và mã đổi tự động mời",
     version="0.1.0",
     lifespan=lifespan
 )
 
-# 全局异常处理
+# Xử lý ngoại lệ toàn cục
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
-    """ 处理 HTTP 异常 """
+    """ Xử lý ngoại lệ HTTP """
     if exc.status_code in [401, 403]:
-        # 检查是否是 HTML 请求
+        # Kiểm tra xem có phải yêu cầu HTML không
         accept = request.headers.get("accept", "")
         if "text/html" in accept:
             return RedirectResponse(url="/login")
     
-    # 默认返回 JSON 响应（FastAPI 的默认行为）
+    # Trả về JSON mặc định (hành vi mặc định của FastAPI)
     return JSONResponse(
         status_code=exc.status_code,
         content={"detail": exc.detail}
     )
 
-# 配置 Session 中间件
+# Cấu hình middleware Session
 app.add_middleware(
     SessionMiddleware,
     secret_key=settings.secret_key,
     session_cookie="session",
-    max_age=14 * 24 * 60 * 60,  # 14 天
+    max_age=14 * 24 * 60 * 60,  # 14 ngày
     same_site="lax",
-    https_only=False  # 开发环境设为 False，生产环境应设为 True
+    https_only=False  # Môi trường dev đặt False, production nên đặt True
 )
 
-# 配置静态文件
+# Cấu hình file tĩnh
 app.mount("/static", StaticFiles(directory=str(APP_DIR / "static")), name="static")
 
-# 配置模板引擎
+# Cấu hình template engine
 templates = Jinja2Templates(directory=str(APP_DIR / "templates"))
 
-# 添加模板过滤器
+# Thêm bộ lọc template
 def format_datetime(dt):
-    """格式化日期时间"""
+    """Định dạng ngày giờ"""
     if not dt:
         return "-"
     if isinstance(dt, str):
         try:
-            # 兼容包含时区信息的字符串
+            # Tương thích với chuỗi có thông tin múi giờ
             dt = datetime.fromisoformat(dt.replace("Z", "+00:00"))
         except:
             return dt
     
-    # 统一转换为北京时间显示 (如果它是 aware datetime)
+    # Chuyển đổi sang múi giờ cài đặt để hiển thị (nếu là aware datetime)
     import pytz
     from app.config import settings
     if dt.tzinfo is None:
-        # 如果是 naive datetime，假设它是本地时区（CST）的时间
+        # Nếu là naive datetime, giả sử là múi giờ địa phương
         pass
     else:
-        # 如果是 aware datetime，转换为目标时区
+        # Nếu là aware datetime, chuyển sang múi giờ mục tiêu
         tz = pytz.timezone(settings.timezone)
         dt = dt.astimezone(tz)
         
     return dt.strftime("%Y-%m-%d %H:%M")
 
 def escape_js(value):
-    """转义字符串用于 JavaScript"""
+    """Escape chuỗi để dùng trong JavaScript"""
     if not value:
         return ""
     return value.replace("\\", "\\\\").replace("'", "\\'").replace('"', '\\"').replace("\n", "\\n").replace("\r", "\\r")
@@ -131,15 +131,15 @@ def escape_js(value):
 templates.env.filters["format_datetime"] = format_datetime
 templates.env.filters["escape_js"] = escape_js
 
-# 配置日志
+# Cấu hình logging
 logging.basicConfig(
     level=getattr(logging, settings.log_level.upper(), logging.INFO),
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
-# 注册路由
-app.include_router(user.router)  # 用户路由(根路径)
+# Đăng ký các route
+app.include_router(user.router)  # Route người dùng (root path)
 app.include_router(redeem.router)
 app.include_router(warranty.router)
 app.include_router(auth.router)
@@ -149,7 +149,7 @@ app.include_router(api.router)
 
 @app.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
-    """登录页面"""
+    """Trang đăng nhập"""
     return templates.TemplateResponse(
         "auth/login.html",
         {"request": request, "user": None}
@@ -158,13 +158,13 @@ async def login_page(request: Request):
 
 @app.get("/health")
 async def health_check():
-    """健康检查端点"""
+    """Endpoint kiểm tra trạng thái hệ thống"""
     return {"status": "healthy"}
 
 
 @app.get("/favicon.ico", include_in_schema=False)
 async def favicon():
-    """ favicon.ico 路由 """
+    """ Route favicon.ico """
     return FileResponse(APP_DIR / "static" / "favicon.png")
 
 

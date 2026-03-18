@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="vi">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GPT Team 兑换</title>
+    <title>Đổi Mã - GPT Team</title>
     <link rel="stylesheet" href="{{ url_for('static', path='/css/user.css') }}">
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -13,94 +13,94 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>GPT Team 兑换</h1>
-            <p class="subtitle">使用兑换码加入 ChatGPT Team</p>
+            <h1>GPT Team - Đổi Mã</h1>
+            <p class="subtitle">Sử dụng mã đổi để tham gia ChatGPT Team</p>
             {% if remaining_spots is not none %}
             <div class="spots-badge"
                 style="display: inline-flex; align-items: center; gap: 6px; background: var(--primary-soft); padding: 6px 12px; border-radius: 20px; font-size: 0.875rem; color: var(--primary); margin-top: 10px; border: 1px solid var(--border-base);">
-                <i data-lucide="users" style="width: 14px; height: 14px;"></i> 剩余车位: {{ remaining_spots }}
+                <i data-lucide="users" style="width: 14px; height: 14px;"></i> Chỗ còn lại: {{ remaining_spots }}
             </div>
             {% endif %}
         </div>
 
-        <!-- 步骤1: 输入兑换码 -->
+        <!-- Bước 1: Nhập mã đổi -->
         <div id="step1" class="step active">
             <div class="card">
-                <h2>输入兑换信息</h2>
+                <h2>Nhập thông tin đổi mã</h2>
                 <form id="verifyForm">
                     <div class="form-group">
-                        <label for="email">邮箱地址</label>
-                        <input type="email" id="email" name="email" required placeholder="请输入您的邮箱地址" class="form-input">
-                        <p class="form-help">请填写您要接受邀请的账号的邮箱，邀请将发送到此邮箱</p>
+                        <label for="email">Địa chỉ Email</label>
+                        <input type="email" id="email" name="email" required placeholder="Nhập địa chỉ email của bạn" class="form-input">
+                        <p class="form-help">Nhập email tài khoản bạn muốn nhận lời mời, lời mời sẽ được gửi đến email này</p>
                     </div>
 
                     <div class="form-group">
-                        <label for="code">兑换码</label>
-                        <input type="text" id="code" name="code" required placeholder="请输入兑换码" class="form-input">
+                        <label for="code">Mã đổi</label>
+                        <input type="text" id="code" name="code" required placeholder="Nhập mã đổi" class="form-input">
                     </div>
 
                     <button type="submit" class="btn btn-primary" id="verifyBtn">
-                        <i data-lucide="shield-check"></i> 验证兑换码
+                        <i data-lucide="shield-check"></i> Xác minh Mã đổi
                     </button>
                 </form>
 
-                <!-- 质保查询区域 -->
+                <!-- Khu vực tra cứu bảo hành -->
                 <div class="warranty-section"
                     style="margin-top: 40px; padding-top: 30px; border-top: 1px solid var(--border-base);">
                     <h3 style="font-size: 1.1rem; margin-bottom: 15px; color: var(--text-primary);">
                         <i data-lucide="shield" style="width: 18px; height: 18px; vertical-align: middle;"></i>
-                        质保查询
+                        Tra cứu Bảo hành
                     </h3>
                     <p class="form-help" style="margin-bottom: 15px;">
-                        如果您使用质保兑换码加入的 Team 被封号，可以在质保期内（一个月）重复使用原兑换码
+                        Nếu bạn dùng mã có bảo hành và Team bị khóa, bạn có thể sử dụng lại mã gốc trong thời hạn bảo hành (một tháng)
                     </p>
                     <div class="form-group" style="margin-bottom: 15px;">
-                        <input type="text" id="warrantyInput" placeholder="请输入原兑换码或邮箱进行查询" class="form-input">
+                        <input type="text" id="warrantyInput" placeholder="Nhập mã đổi gốc hoặc email để tra cứu" class="form-input">
                     </div>
                     <button type="button" class="btn btn-secondary" id="checkWarrantyBtn" onclick="checkWarranty()"
                         style="width: 100%;">
-                        <i data-lucide="search"></i> 查询质保状态
+                        <i data-lucide="search"></i> Tra cứu trạng thái bảo hành
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- 质保查询结果 -->
+        <!-- Kết quả tra cứu bảo hành -->
         <div id="warrantyResult" class="step" style="display: none;">
             <div class="card">
-                <h2>质保查询结果</h2>
+                <h2>Kết quả Tra cứu Bảo hành</h2>
                 <div id="warrantyContent">
-                    <!-- 质保结果将通过JavaScript动态生成 -->
+                    <!-- Nội dung kết quả được tạo động bằng JavaScript -->
                 </div>
                 <div class="actions" style="margin-top: 20px;">
-                    <button onclick="backToStep1()" class="btn btn-secondary">返回</button>
+                    <button onclick="backToStep1()" class="btn btn-secondary">Quay lại</button>
                 </div>
             </div>
         </div>
 
-        <!-- 步骤2: 选择Team (已废弃，保留占位符防止 JS 报错) -->
+        <!-- Bước 2: Chọn Team (Không còn sử dụng, giữ lại để tránh lỗi JS) -->
         <div id="step2" class="step" style="display: none;">
             <div class="card">
-                <h2>选择 Team</h2>
+                <h2>Chọn Team</h2>
                 <div id="teamsList" class="teams-list"></div>
                 <div class="actions">
-                    <button onclick="backToStep1()" class="btn btn-secondary">返回</button>
-                    <button onclick="autoSelectTeam()" class="btn btn-primary">自动选择</button>
+                    <button onclick="backToStep1()" class="btn btn-secondary">Quay lại</button>
+                    <button onclick="autoSelectTeam()" class="btn btn-primary">Tự động chọn</button>
                 </div>
             </div>
         </div>
 
-        <!-- 步骤3: 兑换结果 -->
+        <!-- Bước 3: Kết quả đổi mã -->
         <div id="step3" class="step">
             <div class="card">
                 <div id="resultContent">
-                    <!-- 结果内容将通过JavaScript动态生成 -->
+                    <!-- Nội dung kết quả được tạo động bằng JavaScript -->
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Toast提示 -->
+    <!-- Toast thông báo -->
     <div id="toast" class="toast"></div>
 
     <script src="{{ url_for('static', path='/js/redeem.js') }}"></script>

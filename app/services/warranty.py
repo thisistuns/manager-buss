@@ -1,6 +1,6 @@
 """
-质保服务
-处理用户质保查询和验证
+Dịch vụ bảo hành
+Xử lý tra cứu và xác minh bảo hành cho người dùng
 """
 import logging
 import asyncio
@@ -15,16 +15,16 @@ from app.utils.time_utils import get_now
 
 logger = logging.getLogger(__name__)
 
-# 全局频率限制字典: {(type, key): last_time}
-# type: 'email' or 'code'
+# Từ điển giới hạn tần suất toàn cục: {(type, key): last_time}
+# type: 'email' hoặc 'code'
 _query_rate_limit = {}
 
 
 class WarrantyService:
-    """质保服务类"""
+    """Lớp dịch vụ bảo hành"""
 
     def __init__(self):
-        """初始化质保服务"""
+        """Khởi tạo dịch vụ bảo hành"""
         from app.services.team import TeamService
         self.team_service = TeamService()
 
@@ -35,25 +35,25 @@ class WarrantyService:
         code: Optional[str] = None
     ) -> Dict[str, Any]:
         """
-        检查用户质保状态
+        Kiểm tra trạng thái bảo hành của người dùng
 
         Args:
-            db_session: 数据库会话
-            email: 用户邮箱
-            code: 兑换码
+            db_session: Phiên làm việc với cơ sở dữ liệu
+            email: Email người dùng
+            code: Mã đổi
 
         Returns:
-            结果字典,包含 success, has_warranty, warranty_valid, warranty_expires_at, 
+            Từ điển kết quả, bao gồm success, has_warranty, warranty_valid, warranty_expires_at, 
             banned_teams, can_reuse, original_code, error
         """
         try:
             if not email and not code:
                 return {
                     "success": False,
-                    "error": "必须提供邮箱或兑换码"
+                    "error": "Bắt buộc phải cung cấp email hoặc mã đổi"
                 }
 
-            # 0. 频率限制 (每个邮箱或每个码 30 秒只能查一次)
+            # 0. Giới hạn tần suất (mỗi email hoặc mỗi mã chỉ được tra cứu 30 giây một lần)
             now = datetime.now()
             limit_key = ("email", email) if email else ("code", code)
             last_time = _query_rate_limit.get(limit_key)
@@ -61,15 +61,15 @@ class WarrantyService:
                 wait_time = int(30 - (now - last_time).total_seconds())
                 return {
                     "success": False,
-                    "error": f"查询太频繁,请 {wait_time} 秒后再试"
+                    "error": f"Tra cứu quá thường xuyên, vui lòng thử lại sau {wait_time} giây"
                 }
             _query_rate_limit[limit_key] = now
 
-            # 1. 查找兑换记录和相关联的 Team, Code
+            # 1. Tìm bản ghi đổi và Team, Code liên quan
             records_data = []
 
             if code:
-                # 通过兑换码查找所有关联记录
+                # Tìm tất cả bản ghi liên quan thông qua mã đổi
                 stmt = (
                     select(RedemptionRecord, RedemptionCode, Team)
                     .options(selectinload(RedemptionRecord.redemption_code), selectinload(RedemptionRecord.team))
@@ -85,7 +85,7 @@ class WarrantyService:
                 else:
                     records_data = []
 
-                # 如果没有记录，可能是码还没被使用或不存在
+                # Nếu không có bản ghi, có thể là mã chưa được sử dụng hoặc không tồn tại
                 if not records_data:
                     stmt = select(RedemptionCode).where(RedemptionCode.code == code)
                     result = await db_session.execute(stmt)
@@ -101,10 +101,10 @@ class WarrantyService:
                             "can_reuse": False,
                             "original_code": None,
                             "records": [],
-                            "message": "兑换码不存在"
+                            "message": "Mã đổi không tồn tại"
                         }
                     
-                    # 只有码没有记录的情况
+                    # Trường hợp chỉ có mã mà không có bản ghi
                     return {
                         "success": True,
                         "has_warranty": redemption_code_obj.has_warranty,
@@ -125,11 +125,11 @@ class WarrantyService:
                             "team_expires_at": None,
                             "warranty_expires_at": redemption_code_obj.warranty_expires_at.isoformat() if redemption_code_obj.warranty_expires_at else None
                         }],
-                        "message": "兑换码尚未被使用"
+                        "message": "Mã đổi chưa được sử dụng"
                     }
 
             elif email:
-                # 通过邮箱查找所有兑换记录
+                # Tìm tất cả bản ghi đổi thông qua email
                 stmt = (
                     select(RedemptionRecord, RedemptionCode, Team)
                     .options(selectinload(RedemptionRecord.redemption_code), selectinload(RedemptionRecord.team))
@@ -141,11 +141,11 @@ class WarrantyService:
                 result = await db_session.execute(stmt)
                 all_records = result.all()
 
-                # 只保留每个兑换码的最近一条记录
+                # Chỉ giữ lại bản ghi gần nhất cho mỗi mã đổi
                 seen_codes = set()
                 records_data = []
                 for row in all_records:
-                    # row format: (RedemptionRecord, RedemptionCode, Team)
+                    # Định dạng dòng: (RedemptionRecord, RedemptionCode, Team)
                     record_obj = row[0]
                     if record_obj.code not in seen_codes:
                         seen_codes.add(record_obj.code)
@@ -161,10 +161,10 @@ class WarrantyService:
                     "can_reuse": False,
                     "original_code": None,
                     "records": [],
-                    "message": "未找到兑换记录"
+                    "message": "Không tìm thấy bản ghi đổi"
                 }
 
-            # 2. 处理记录并进行必要的实时同步
+            # 2. Xử lý bản ghi và thực hiện đồng bộ thời gian thực cần thiết
             final_records = []
             banned_teams_info = []
             has_any_warranty = False
@@ -188,10 +188,10 @@ class WarrantyService:
                         # 跳过这条无效记录，提示用户重新兑换
                         continue 
 
-                # 动态计算/提取质保信息
+                # Tính toán/trích xuất thông tin bảo hành một cách động
                 expiry_date = code_obj.warranty_expires_at
                 
-                # 如果是质保码且已使用，但到期时间为空，尝试动态计算
+                # Nếu là mã bảo hành và đã sử dụng nhưng không có thời gian hết hạn, thử tính toán động
                 if code_obj.has_warranty and not expiry_date:
                     start_time = code_obj.used_at or record.redeemed_at # 优先取首次使用时间
                     if start_time:
@@ -202,21 +202,21 @@ class WarrantyService:
                 if expiry_date and expiry_date < get_now():
                     is_valid = False
                 elif not expiry_date and code_obj.has_warranty and code_obj.status == "unused":
-                    # 未使用的质保码，暂时标记为有效
+                    # Mã bảo hành chưa sử dụng, tạm thời đánh dấu là còn hiệu lực
                     is_valid = True
                 elif not expiry_date:
-                    # 既没日期也没记录，通常是非质保码
+                    # Không có ngày cũng không có bản ghi, thường là mã không có bảo hành
                     is_valid = False
 
                 if code_obj.has_warranty:
                     has_any_warranty = True
-                    # 以最近的一个质保码作为主要质保状态参考
+                    # Lấy mã bảo hành gần nhất làm tham chiếu trạng thái bảo hành chính
                     if primary_code is None:
                         primary_warranty_valid = is_valid
                         primary_expiry = expiry_date
                         primary_code = code_obj.code
 
-                # 记录封号 Team
+                # Ghi nhận các Team bị khóa (banned)
                 if team.status == "banned":
                     banned_teams_info.append({
                         "team_id": team.id,
@@ -240,17 +240,17 @@ class WarrantyService:
                     "device_code_auth_enabled": team.device_code_auth_enabled
                 })
 
-            # 3. 判断是否可以重复使用 (只要有有效的质保码且有被封的 Team)
+            # 3. Xác định có thể sử dụng lại hay không (chỉ cần có mã bảo hành hợp lệ và có Team bị khóa)
             if has_any_warranty and primary_warranty_valid and len(banned_teams_info) > 0:
-                # 进一步验证 (使用现有的 validate_warranty_reuse 逻辑)
-                # 这里为了简单直接复用逻辑判断
+                # Xác minh thêm (tái sử dụng logic validate_warranty_reuse hiện có)
+                # Ở đây để đơn giản thì tái sử dụng trực tiếp logic có sẵn
                 can_reuse = True
 
-            # 4. 最终状态判定
-            message = "查询成功"
+            # 4. Xác định trạng thái cuối cùng
+            message = "Tra cứu thành công"
             if has_any_warranty and not final_records and records_data:
-                # 这种情况说明刚才所有记录都被自愈逻辑删除了（全是虚假成功）
-                message = "系统发现您的兑换记录存在同步异常，已为您自动修复！您的兑换码已恢复，请返回兑换页面重新提交一次即可。"
+                # Trường hợp này cho thấy tất cả bản ghi vừa rồi đều bị cơ chế tự chữa (tự động sửa) xóa bỏ (tất cả đều là thành công ảo)
+                message = "Hệ thống phát hiện bản ghi đổi của bạn có vấn đề đồng bộ và đã tự động sửa! Mã đổi của bạn đã được khôi phục, vui lòng quay lại trang đổi mã và gửi lại một lần nữa."
                 can_reuse = True
 
             return {
@@ -266,10 +266,10 @@ class WarrantyService:
             }
 
         except Exception as e:
-            logger.error(f"检查质保状态失败: {e}")
+            logger.error(f"Kiểm tra trạng thái bảo hành thất bại: {e}")
             return {
                 "success": False,
-                "error": f"检查质保状态失败: {str(e)}"
+            "error": f"Kiểm tra trạng thái bảo hành thất bại: {str(e)}"
             }
 
     async def validate_warranty_reuse(
@@ -279,18 +279,18 @@ class WarrantyService:
         email: str
     ) -> Dict[str, Any]:
         """
-        验证质保码是否可重复使用
+        Xác minh xem mã bảo hành có thể sử dụng lại hay không
 
         Args:
-            db_session: 数据库会话
-            code: 兑换码
-            email: 用户邮箱
+            db_session: Phiên làm việc với cơ sở dữ liệu
+            code: Mã đổi
+            email: Email người dùng
 
         Returns:
-            结果字典,包含 success, can_reuse, reason, error
+            Từ điển kết quả, bao gồm success, can_reuse, reason, error
         """
         try:
-            # 1. 查询兑换码
+            # 1. Truy vấn mã đổi
             stmt = select(RedemptionCode).where(RedemptionCode.code == code)
             result = await db_session.execute(stmt)
             redemption_code = result.scalar_one_or_none()
@@ -299,31 +299,31 @@ class WarrantyService:
                 return {
                     "success": True,
                     "can_reuse": False,
-                    "reason": "兑换码不存在",
+                    "reason": "Mã đổi không tồn tại",
                     "error": None
                 }
 
-            # 2. 检查是否为质保码
+            # 2. Kiểm tra có phải mã bảo hành hay không
             if not redemption_code.has_warranty:
                 return {
                     "success": True,
                     "can_reuse": False,
-                    "reason": "该兑换码不是质保兑换码",
+                    "reason": "Mã đổi này không phải là mã bảo hành",
                     "error": None
                 }
 
-            # 3. 检查质保期是否有效
+            # 3. Kiểm tra thời hạn bảo hành có còn hiệu lực hay không
             if redemption_code.warranty_expires_at:
                 if redemption_code.warranty_expires_at < get_now():
                     return {
                         "success": True,
                         "can_reuse": False,
-                        "reason": "质保已过期",
+                    "reason": "Bảo hành đã hết hạn",
                         "error": None
                     }
 
-            # 4. 检查该兑换码当前是否已有正在使用的活跃 Team (全局检查，不限邮箱)
-            # 逻辑：如果该码名下有任何一个 Team 还是 active/full 状态且未过期，则不允许新的激活
+            # 4. Kiểm tra hiện tại mã đổi này có Team đang sử dụng nào còn hoạt động hay không (kiểm tra toàn cục, không giới hạn email)
+            # Logic: Nếu dưới mã này có bất kỳ Team nào vẫn ở trạng thái active/full và chưa hết hạn thì không cho phép kích hoạt mới
             stmt = select(RedemptionRecord).where(RedemptionRecord.code == code)
             result = await db_session.execute(stmt)
             all_records_for_code = result.scalars().all()
@@ -336,75 +336,75 @@ class WarrantyService:
                 if team:
                     is_expired = team.expires_at and team.expires_at < get_now()
                     if team.status in ["active", "full"] and not is_expired:
-                        # --- 自愈逻辑：验证是否真的在 Team 中 ---
-                        # 针对“虚假成功”导致的拉人记录残留进行清理
-                        logger.info(f"验证质保重复使用: 发现活跃 record，正在同步 Team {team.id} 以校验成员是否存在")
+                        # --- Logic tự chữa: xác minh xem có thực sự ở trong Team hay không ---
+                        # Dùng để dọn các bản ghi kéo người còn sót lại do "thành công ảo"
+                        logger.info(f"Xác minh dùng lại bảo hành: phát hiện bản ghi đang hoạt động, đang đồng bộ Team {team.id} để kiểm tra thành viên có tồn tại hay không")
                         sync_res = await self.team_service.sync_team_info(team.id, db_session)
                         member_emails = [m.lower() for m in sync_res.get("member_emails", [])]
                         
                         if record.email.lower() not in member_emails:
-                            logger.warning(f"自愈逻辑: 发现孤儿记录 (Email: {record.email}, Team: {team.id}), 但同步结果中不包含该成员。正在清理记录。")
-                            # 删除该孤儿记录
+                            logger.warning(f"Logic tự chữa: phát hiện bản ghi mồ côi (Email: {record.email}, Team: {team.id}), nhưng kết quả đồng bộ không chứa thành viên này. Đang xóa bản ghi.")
+                            # Xóa bản ghi mồ côi
                             await db_session.delete(record)
                             if not db_session.in_transaction():
                                 await db_session.commit()
                             else:
                                 await db_session.flush()
-                            continue # 继续检查下一个记录或结束循环
+                            continue # Tiếp tục kiểm tra bản ghi tiếp theo hoặc kết thúc vòng lặp
 
-                        # 如果是同一个邮箱且确实在 Team 中，提示已在有效 Team 中
+                        # Nếu cùng một email và thực sự đang trong Team, thông báo là đã ở trong Team hợp lệ
                         if record.email == email:
                             return {
                                 "success": True,
                                 "can_reuse": False,
-                                "reason": f"您已在有效 Team 中 ({team.team_name or team.id})，不可重复兑换",
+                                "reason": f"Bạn đã ở trong Team hợp lệ ({team.team_name or team.id}), không thể đổi lại",
                                 "error": None
                             }
                         else:
-                            # 如果是不同邮箱，提示已被占用
+                            # Nếu là email khác, thông báo mã đã bị chiếm dụng
                             return {
                                 "success": True,
                                 "can_reuse": False,
-                                "reason": "该兑换码当前已被其他账号绑定且正在使用中。如需更换，请确保原账号已下车或原 Team 已失效。",
+                                "reason": "Mã đổi này hiện đang được tài khoản khác sử dụng. Nếu muốn đổi lại, hãy đảm bảo tài khoản cũ đã rời Team hoặc Team cũ đã không còn hiệu lực.",
                                 "error": None
                             }
 
-            # 刷新记录列表 (可能在上面自愈逻辑中删除了孤儿记录)
+            # Làm mới danh sách bản ghi (có thể ở bước trên đã xóa các bản ghi mồ côi bởi logic tự chữa)
             stmt = select(RedemptionRecord).where(RedemptionRecord.code == code)
             result = await db_session.execute(stmt)
             all_records_for_code = result.scalars().all()
 
-            # 5. 查找当前用户使用该兑换码的记录 (用于后续逻辑判断)
+            # 5. Tìm bản ghi sử dụng mã đổi này của người dùng hiện tại (phục vụ phán đoán logic tiếp theo)
             records = [r for r in all_records_for_code if r.email == email]
             
             if not records:
-                # 之前没有该邮箱的记录，但上面已经检查过没有其他活跃 Team 了，所以允许“新开”或“接手”
+                # Trước đó không có bản ghi nào với email này, nhưng phía trên đã kiểm tra không có Team hoạt động nào khác, nên cho phép “mở mới” hoặc “tiếp nhận”
                 return {
                     "success": True,
                     "can_reuse": True,
-                    "reason": "可更名使用 (或首次使用)",
+                    "reason": "Có thể đổi tên để sử dụng (hoặc là lần sử dụng đầu tiên)",
                     "error": None
                 }
 
-            # 5. 检查用户当前是否已在有效的 Team 中
-            # 逻辑：如果最近一次加入的 Team 仍然有效（active/full 且未过期），则不允许重复使用
+            # 5. Kiểm tra hiện tại người dùng có đang ở trong Team hợp lệ nào không
+            # Logic: Nếu Team tham gia gần nhất vẫn còn hiệu lực (active/full và chưa hết hạn) thì không cho phép dùng lại
             for record in records:
                 stmt = select(Team).where(Team.id == record.team_id)
                 result = await db_session.execute(stmt)
                 team = result.scalar_one_or_none()
                 
                 if team:
-                    # 如果有任何一个关联 Team 还是 active/full 状态，且未过期
+                    # Nếu có bất kỳ Team liên quan nào vẫn ở trạng thái active/full và chưa hết hạn
                     is_expired = team.expires_at and team.expires_at < get_now()
                     if team.status in ["active", "full"] and not is_expired:
                         return {
                             "success": True,
                             "can_reuse": False,
-                            "reason": f"您已在有效 Team 中 ({team.team_name or team.id})，不可重复兑换",
+                                "reason": f"Bạn đã ở trong Team hợp lệ ({team.team_name or team.id}), không thể đổi lại",
                             "error": None
                         }
 
-            # 6. 检查是否有过被封的记录
+            # 6. Kiểm tra có bản ghi nào bị khóa (banned) hay không
             has_banned_team = False
             for record in records:
                 stmt = select(Team).where(Team.id == record.team_id)
@@ -417,26 +417,26 @@ class WarrantyService:
                 return {
                     "success": True,
                     "can_reuse": True,
-                    "reason": "之前加入的 Team 已封号，可使用质保重复兑换",
+                    "reason": "Team trước đó bạn tham gia đã bị khóa, có thể dùng bảo hành để đổi lại",
                     "error": None
                 }
             else:
                 return {
                     "success": True,
                     "can_reuse": False,
-                    "reason": "未找到被封号记录，且质保不支持正常过期或异常提示的重复兑换",
+                    "reason": "Không tìm thấy bản ghi bị khóa, và bảo hành không hỗ trợ đổi lại trong trường hợp hết hạn bình thường hoặc lỗi khác",
                     "error": None
                 }
 
         except Exception as e:
-            logger.error(f"验证质保码重复使用失败: {e}")
+            logger.error(f"Xác minh dùng lại mã bảo hành thất bại: {e}")
             return {
                 "success": False,
                 "can_reuse": False,
                 "reason": None,
-                "error": f"验证失败: {str(e)}"
+                "error": f"Xác minh thất bại: {str(e)}"
             }
 
 
-# 创建全局质保服务实例
+# Tạo instance dịch vụ bảo hành toàn cục
 warranty_service = WarrantyService()

@@ -1,6 +1,6 @@
 """
-认证路由
-处理管理员登录和登出
+Route xác thực
+Xử lý đăng nhập và đăng xuất của quản trị viên
 """
 import logging
 from typing import Optional
@@ -15,41 +15,41 @@ from app.dependencies.auth import get_current_user
 
 logger = logging.getLogger(__name__)
 
-# 创建路由器
+# Tạo router
 router = APIRouter(
     prefix="/auth",
     tags=["auth"]
 )
 
 
-# 请求模型
+# Model yêu cầu
 class LoginRequest(BaseModel):
-    """登录请求"""
-    password: str = Field(..., description="管理员密码", min_length=1)
+    """Yêu cầu đăng nhập"""
+    password: str = Field(..., description="Mật khẩu quản trị viên", min_length=1)
 
 
 class ChangePasswordRequest(BaseModel):
-    """修改密码请求"""
-    old_password: str = Field(..., description="旧密码", min_length=1)
-    new_password: str = Field(..., description="新密码", min_length=6)
+    """Yêu cầu đổi mật khẩu"""
+    old_password: str = Field(..., description="Mật khẩu cũ", min_length=1)
+    new_password: str = Field(..., description="Mật khẩu mới", min_length=6)
 
 
-# 响应模型
+# Model phản hồi
 class LoginResponse(BaseModel):
-    """登录响应"""
+    """Phản hồi đăng nhập"""
     success: bool
     message: Optional[str] = None
     error: Optional[str] = None
 
 
 class LogoutResponse(BaseModel):
-    """登出响应"""
+    """Phản hồi đăng xuất"""
     success: bool
     message: str
 
 
 class ChangePasswordResponse(BaseModel):
-    """修改密码响应"""
+    """Phản hồi đổi mật khẩu"""
     success: bool
     message: Optional[str] = None
     error: Optional[str] = None
@@ -62,20 +62,20 @@ async def login(
     db: AsyncSession = Depends(get_db)
 ):
     """
-    管理员登录
+    Đăng nhập quản trị viên
 
     Args:
-        request: FastAPI Request 对象
-        login_data: 登录数据
-        db: 数据库会话
+        request: Đối tượng Request của FastAPI
+        login_data: Dữ liệu đăng nhập
+        db: Phiên kết nối database
 
     Returns:
-        登录结果
+        Kết quả đăng nhập
     """
     try:
-        logger.info("管理员登录请求")
+        logger.info("Yêu cầu đăng nhập quản trị viên")
 
-        # 验证密码
+        # Xác minh mật khẩu
         result = await auth_service.verify_admin_login(
             login_data.password,
             db
@@ -87,57 +87,57 @@ async def login(
                 detail=result["error"]
             )
 
-        # 设置 Session
+        # Thiết lập Session
         request.session["user"] = {
             "username": "admin",
             "is_admin": True
         }
 
-        logger.info("管理员登录成功，Session 已创建")
+        logger.info("Đăng nhập quản trị viên thành công, Session đã được tạo")
 
         return LoginResponse(
             success=True,
-            message="登录成功",
+            message="Đăng nhập thành công",
             error=None
         )
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"登录失败: {e}")
+        logger.error(f"Đăng nhập thất bại: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"登录失败: {str(e)}"
+            detail=f"Đăng nhập thất bại: {str(e)}"
         )
 
 
 @router.post("/logout", response_model=LogoutResponse)
 async def logout(request: Request):
     """
-    管理员登出
+    Đăng xuất quản trị viên
 
     Args:
-        request: FastAPI Request 对象
+        request: Đối tượng Request của FastAPI
 
     Returns:
-        登出结果
+        Kết quả đăng xuất
     """
     try:
-        # 清除 Session
+        # Xóa Session
         request.session.clear()
 
-        logger.info("管理员登出成功")
+        logger.info("Đăng xuất quản trị viên thành công")
 
         return LogoutResponse(
             success=True,
-            message="登出成功"
+            message="Đăng xuất thành công"
         )
 
     except Exception as e:
-        logger.error(f"登出失败: {e}")
+        logger.error(f"Đăng xuất thất bại: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"登出失败: {str(e)}"
+            detail=f"Đăng xuất thất bại: {str(e)}"
         )
 
 
@@ -149,21 +149,21 @@ async def change_password(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    修改管理员密码
+    Đổi mật khẩu quản trị viên
 
     Args:
-        request: FastAPI Request 对象
-        password_data: 密码数据
-        db: 数据库会话
-        current_user: 当前用户（需要登录）
+        request: Đối tượng Request của FastAPI
+        password_data: Dữ liệu mật khẩu
+        db: Phiên kết nối database
+        current_user: Người dùng hiện tại (cần đăng nhập)
 
     Returns:
-        修改结果
+        Kết quả đổi mật khẩu
     """
     try:
-        logger.info("管理员修改密码请求")
+        logger.info("Quản trị viên yêu cầu đổi mật khẩu")
 
-        # 修改密码
+        # Đổi mật khẩu
         result = await auth_service.change_admin_password(
             password_data.old_password,
             password_data.new_password,
@@ -176,37 +176,37 @@ async def change_password(
                 detail=result["error"]
             )
 
-        # 清除 Session，要求重新登录
+        # Xóa Session, yêu cầu đăng nhập lại
         request.session.clear()
 
-        logger.info("管理员密码修改成功")
+        logger.info("Đổi mật khẩu quản trị viên thành công")
 
         return ChangePasswordResponse(
             success=True,
-            message="密码修改成功，请重新登录",
+            message="Đổi mật khẩu thành công, vui lòng đăng nhập lại",
             error=None
         )
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"修改密码失败: {e}")
+        logger.error(f"Đổi mật khẩu thất bại: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"修改密码失败: {str(e)}"
+            detail=f"Đổi mật khẩu thất bại: {str(e)}"
         )
 
 
 @router.get("/status")
 async def get_auth_status(request: Request):
     """
-    获取认证状态
+    Lấy trạng thái xác thực
 
     Args:
-        request: FastAPI Request 对象
+        request: Đối tượng Request của FastAPI
 
     Returns:
-        认证状态
+        Trạng thái xác thực
     """
     user = request.session.get("user")
 
